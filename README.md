@@ -1,7 +1,7 @@
 # C3 JVMS
 
 ### Dissasemble classfiles:
-run `c3c run main -- resources/Simple.kt`
+run `c3c run main -- resources/Simple.class`
 
 ```cpp
 fn void main(String[] args)
