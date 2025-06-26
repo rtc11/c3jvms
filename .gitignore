@@ -1,4 +1,6 @@
 *.dSYM/
 build/
 .build/
-
+repl
+resources/META-INF/
+resources/person/
