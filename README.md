@@ -15,3 +15,9 @@ fn void main(String[] args)
 ### REPL
 run `./scripts/repl.sh`
 
+### Development
+compile: `c3c build`
+
+run: `c3c run main`
+
+test: `c3c test` or `watchexec -e c3 c3c test`
