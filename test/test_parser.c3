@@ -55,6 +55,47 @@ fn void expression_if_else() @test {
     identifier_eq(alt.expression, "y");
 }
 
+fn void expression_fn0() @test {
+    Fn* expr = (Fn*) expression(`fn () {}`);
+    test::eq(0, expr.parameters.len());
+    test::eq(0, expr.body.statements.len());
+}
+
+fn void expression_fn1() @test {
+    Fn* expr = (Fn*) expression(`fn (x) {}`);
+    test::eq(1, expr.parameters.len());
+    identifier_eq(&expr.parameters[0], "x");
+    test::eq(0, expr.body.statements.len());
+}
+
+fn void expression_fn2() @test {
+    Fn* expr = (Fn*) expression(`fn (x, y) { x + y };`); // TODO: this should work fn( vs fn (
+    test::eq(2, expr.parameters.len());
+    identifier_eq(&expr.parameters[0], "x");
+    identifier_eq(&expr.parameters[1], "y");
+    test::eq(1, expr.body.statements.len());
+    ExpressionStatement* body_stmt = (ExpressionStatement*) expr.body.statements[0];
+    test_expression_infix(body_stmt.expression, "x", "+", "y");
+}
+
+fn void expression_fn3() @test {
+    Fn* expr = (Fn*) expression(`fn (x, y, z) {};`); 
+    test::eq(3, expr.parameters.len());
+    identifier_eq(&expr.parameters[0], "x");
+    identifier_eq(&expr.parameters[1], "y");
+    identifier_eq(&expr.parameters[2], "z");
+    test::eq(0, expr.body.statements.len());
+}
+
+fn void expression_call() @test {
+    Call* expr = (Call*) expression(`add(1, 2 * 3, 4 + 5);`);
+    identifier_eq(expr.function, "add");
+    test::eq(3, expr.arguments.len());
+    expr_eq(expr.arguments[0], 1);
+    test_expression_infix(expr.arguments[1], 2, "*", 3);
+    test_expression_infix(expr.arguments[2], 4, "+", 5);
+}
+
 fn void expression_prefix() @test {
     test_expression_prefix(expression("!69;"), "!", 69);
     test_expression_prefix(expression("-69;"), "-", 69);

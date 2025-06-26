@@ -165,3 +165,37 @@ fn usz? BlockStatement.to_format(&self, Formatter* f) @dynamic {
     foreach(stmt: self.statements) out += f.printf("%s", stmt)!; 
     return out;
 }
+
+struct Fn (Expression)
+{
+    Token token;
+    List{Identifier} parameters;
+    BlockStatement* body;
+}
+fn void Fn.expression_node(&self) @dynamic {}
+fn String Fn.token_literal(&self) @dynamic => self.token.literal;
+fn usz? Fn.to_format(&self, Formatter* f) @dynamic {
+    usz out = f.printf("%s(", self.token_literal())!;
+	String[] params = allocator::alloc_array(allocator::temp(), String, self.parameters.len());
+    foreach(i, p: self.parameters) params[i] = string::tformat("%s", p);
+    out += f.printf("%s", string::join(allocator::temp(), params, ", "))!;
+    out += f.printf(")%s", self.body)!;
+    return out;
+}
+
+struct Call (Expression)
+{
+    Token token;
+    Expression function;
+    List{Expression} arguments;
+}
+fn void Call.expression_node(&self) @dynamic {}
+fn String Call.token_literal(&self) @dynamic => self.token.literal;
+fn usz? Call.to_format(&self, Formatter* f) @dynamic {
+    usz out;
+	String[] args = allocator::alloc_array(allocator::temp(), String, self.arguments.len());
+    foreach(i, a: self.arguments) args[i] = string::tformat("%s", a);
+    out += f.printf("%s", self.function)!;
+    out += f.printf("(%s)", string::join(allocator::temp(), args, ", "))!;
+    return out;
+}

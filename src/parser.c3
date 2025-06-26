@@ -41,6 +41,7 @@ fn Parser new(Lexer lexer, Allocator allocator)
     presendences[MINUS] = SUM;
     presendences[SLASH] = PRODUCT;
     presendences[ASTERISK] = PRODUCT;
+    presendences[L_PAREN] = CALL;
 
     Parser p = { 
         .allocator = allocator,
@@ -62,6 +63,7 @@ fn Parser new(Lexer lexer, Allocator allocator)
     p.register_prefix(L_PAREN, (ParsePrefix)&Parser.parse_grouped_expression);
     p.register_prefix(IF, (ParsePrefix)&Parser.parse_if_expression);
     p.register_prefix(ELSE, (ParsePrefix)&Parser.parse_if_expression);
+    p.register_prefix(FN, (ParsePrefix)&Parser.parse_fn_expression);
 
     p.register_infix(PLUS, (ParseInfix)&Parser.parse_infix_expression);
     p.register_infix(MINUS, (ParseInfix)&Parser.parse_infix_expression);
@@ -71,6 +73,7 @@ fn Parser new(Lexer lexer, Allocator allocator)
     p.register_infix(NEQ, (ParseInfix)&Parser.parse_infix_expression);
     p.register_infix(LT, (ParseInfix)&Parser.parse_infix_expression);
     p.register_infix(GT, (ParseInfix)&Parser.parse_infix_expression);
+    p.register_infix(L_PAREN, (ParseInfix)&Parser.parse_call_expression);
 
     return p;
 }
@@ -209,6 +212,38 @@ fn Expression Parser.parse_infix_expression(&self, Expression left_expr)
     return (Expression) infix;
 }
 
+fn Expression Parser.parse_call_expression(&self, Expression function)
+{
+    Call* call = allocator::new(self.allocator, Call, {
+        .token = self.cur, 
+        .function = function,
+        .arguments = self.parse_call_args(),
+    });
+    return (Expression) call;
+}
+
+fn List{Expression} Parser.parse_call_args(&self)
+{
+    List{Expression} args;
+    args.tinit();
+
+    if (self.peek_token_is(R_PAREN)) {
+        self.next_token();
+        return args;
+    }
+
+    self.next_token();
+    args.push(self.parse_expression(LOWEST));
+    while (self.peek_token_is(COMMA)) {
+        self.next_token();
+        self.next_token();
+        args.push(self.parse_expression(LOWEST));
+    }
+
+    if (!self.expect_peek(R_PAREN)) return {};
+    return args;
+}
+
 fn Expression Parser.parse_grouped_expression(&self)
 {
     self.next_token();
@@ -234,6 +269,48 @@ fn Expression Parser.parse_if_expression(&self)
         expr.alternative = self.parse_block_statement();
     }
     return (Expression) expr;
+}
+
+fn Expression Parser.parse_fn_expression(&self)
+{
+    Fn* expr = allocator::new(self.allocator, Fn, {
+        .token = self.cur,
+    });
+    if (!self.expect_peek(L_PAREN)) return null;
+    expr.parameters = self.parse_fn_parameters();
+    if (!self.expect_peek(L_BRACE)) return null;
+    expr.body = self.parse_block_statement();
+    return (Expression) expr;
+}
+
+fn List{Identifier} Parser.parse_fn_parameters(&self)
+{
+    List{Identifier} idents;
+    idents.tinit();
+
+    if (self.peek_token_is(R_PAREN)) {
+        self.next_token();
+        return idents;
+    }
+
+    self.next_token();
+
+    idents.push(*allocator::new(self.allocator, Identifier, {
+        .token = self.cur,
+        .value = self.cur.literal,
+    }));
+
+    while (self.peek_token_is(COMMA)) {
+        self.next_token();
+        self.next_token();
+        idents.push(*allocator::new(self.allocator, Identifier, {
+            .token = self.cur,
+            .value = self.cur.literal,
+        }));
+    }
+
+    if (!self.expect_peek(R_PAREN)) return {};
+    return idents;
 }
 
 fn BlockStatement* Parser.parse_block_statement(&self)

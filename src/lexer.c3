@@ -135,7 +135,7 @@ fn Token Lexer.read_identifier(&self)
 
     switch (identifier)
     {
-        case "fn": return {FUNCTION, identifier};  
+        case "fn": return {FN, identifier};  
         case "int": return {INT, identifier};  
         case "true": return {TRUE, identifier};  
         case "false": return {FALSE, identifier};  
@@ -181,7 +181,7 @@ enum TokenType : (String literal)
     ASSIGN      = "=",
     INT         = "int", // keyword int
     INT_LITERAL = "",    // interger literal like "42"
-    FUNCTION    = "fn",
+    FN          = "fn",
     IF          = "if",
     ELSE        = "else",
     TRUE        = "true",

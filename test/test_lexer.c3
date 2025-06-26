@@ -8,7 +8,7 @@ fn void literal_fn()
 {
     String code = `fn`;
     Lexer lexer = lexer::new(code);
-    test::eq(lexer.next().type, TokenType.FUNCTION);
+    test::eq(lexer.next().type, TokenType.FN);
 }
 
 fn void literal_int()

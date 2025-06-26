@@ -20,9 +20,11 @@ fn void main(String[] args)
 
 fn void read_input()
 {
+    // Lexer lexer = lexer::new(`fn(x, y) { x + y; }`);
     Lexer lexer = lexer::new(`5 < 4 != 3 > 4`);
     Parser parser = parser::new(lexer, allocator::heap());
     Program prog = parser.parse_program();
+    io::printfn("%s", prog);
     ExpressionStatement* stmt = (ExpressionStatement*) prog.statements[0];
     ascii::print_expr_stmt(prog);
 }
