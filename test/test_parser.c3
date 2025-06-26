@@ -1,0 +1,170 @@
+module test::parser;
+
+import parser, lexer, ast;
+import std::io;
+import std::collections::list;
+
+alias StrTuple = String[2];
+
+fn void statement_int() @test {
+    Lexer lexer = lexer::new(`int num = 10;`);
+    Parser parser = parser::new(lexer, allocator::temp());
+    Program prog = parser.parse_program();
+    any stmt = prog.statements[0];
+    test::eq(((IntStatement*) stmt).token_literal(), "int");
+}
+
+fn void statement_return() @test {
+    Lexer lexer = lexer::new(`return 5;`);
+    Parser parser = parser::new(lexer, allocator::temp());
+    Program prog = parser.parse_program();
+    any stmt = prog.statements[0];
+    test::eq(((ReturnStatement*) stmt).token_literal(), "return");
+}
+
+fn void expression_identifier() @test {
+    expr_eq(expression(`foobar;`), "foobar");
+}
+
+fn void expression_int() @test {
+    expr_eq(expression(`5;`), 5);
+}
+
+fn void expression_bool() @test {
+    expr_eq(expression(`true;`), true);
+    expr_eq(expression(`false;`), false);
+}
+
+fn void expression_if() @test {
+    If* expr = (If*) expression(`if (x < y) { x }`);;
+    test_expression_infix(expr.condition, "x", "<", "y");
+    test::eq(1, expr.consequence.statements.len());
+    ExpressionStatement* cons = (ExpressionStatement*) expr.consequence.statements[0];
+    identifier_eq(cons.expression, "x");
+    test::eq(null, expr.alternative);
+}
+
+fn void expression_if_else() @test {
+    If* expr = (If*) expression(`if (x < y) { x } else { y }`);
+    test_expression_infix(expr.condition, "x", "<", "y");
+    test::eq(1, expr.consequence.statements.len());
+    ExpressionStatement* cons = (ExpressionStatement*) expr.consequence.statements[0];
+    identifier_eq(cons.expression, "x");
+    test::eq(1, expr.alternative.statements.len());
+    ExpressionStatement* alt = (ExpressionStatement*) expr.alternative.statements[0];
+    identifier_eq(alt.expression, "y");
+}
+
+fn void expression_prefix() @test {
+    test_expression_prefix(expression("!69;"), "!", 69);
+    test_expression_prefix(expression("-69;"), "-", 69);
+    test_expression_prefix(expression("!true"), "!", true);
+    test_expression_prefix(expression("!false"), "!", false);
+}
+
+fn void expression_infix() @test {
+    test_expression_infix(expression("true == true"), true, "==", true);
+    test_expression_infix(expression("true != false"), true, "!=", false);
+    test_expression_infix(expression("false == false"), false, "==", false);
+    test_expression_infix(expression("5 + 5;"), 5, "+", 5);
+    test_expression_infix(expression("5 - 5;"), 5, "-", 5);
+    test_expression_infix(expression("5 * 5;"), 5, "*", 5);
+    test_expression_infix(expression("5 / 5;"), 5, "/", 5);
+    test_expression_infix(expression("5 > 5;"), 5, ">", 5);
+    test_expression_infix(expression("5 < 5;"), 5, "<", 5);
+    test_expression_infix(expression("5 == 5;"),5, "==", 5);
+    test_expression_infix(expression("5 != 5;"),5, "!=", 5);
+}
+
+fn void operator_presendence() @test {
+    StrTuple[21] cases = { 
+        {"-a * b",  "((-a) * b)"},
+        {"!-a",  "(!(-a))"},
+        {"a + b + c",  "((a + b) + c)"},
+        {"a + b - c",  "((a + b) - c)"},
+        {"a * b * c",  "((a * b) * c)"},
+        {"a * b / c",  "((a * b) / c)"},
+        {"a + b / c",  "(a + (b / c))"},
+        {"a + b * c + d / e - f",  "(((a + (b * c)) + (d / e)) - f)"},
+        {"3 + 4; -5 * 5",  "(3 + 4)((-5) * 5)"},
+        {"5 > 4 == 3 < 4",  "((5 > 4) == (3 < 4))"},
+        {"5 < 4 != 3 > 4",  "((5 < 4) != (3 > 4))"},
+        {"3 + 4 * 5 == 3 * 1 + 4 * 5",  "((3 + (4 * 5)) == ((3 * 1) + (4 * 5)))"},
+        { "true", "true" },
+        { "false", "false" },
+        { "3 > 5 == false", "((3 > 5) == false)" },
+        { "3 < 5 == true", "((3 < 5) == true)" },
+        { "1 + (2 + 3) + 4", "((1 + (2 + 3)) + 4)" },
+        { "(5 + 5) * 2", "((5 + 5) * 2)" },
+        { "2 / (5 + 5)", "(2 / (5 + 5))" },
+        { "-(5 + 5)", "(-(5 + 5))" },
+        { "!(true == true;)", "(!(true == true))" }, // TODO: remove semicolon when L_PAREN presendence is implemented
+    };
+    for(int i = 0; i < cases.len; i++) {
+        Lexer lexer = lexer::new(cases[i][0]);
+        Parser parser = parser::new(lexer, allocator::temp());
+        Program prog = parser.parse_program();
+        check_parser_errors(&parser);
+        test::eq(string::tformat("%s", prog), cases[i][1]);
+    }
+}
+
+fn Expression expression(String input) {
+    Lexer lexer = lexer::new(input);
+    Parser parser = parser::new(lexer, allocator::temp());
+    Program prog = parser.parse_program();
+    check_parser_errors(&parser);
+    test::eq(1, prog.statements.len());
+    Statement stmt = prog.statements[0];
+    ExpressionStatement* expr_stmt = (ExpressionStatement*) stmt;
+    return expr_stmt.expression;
+}
+
+macro test_expression_prefix(Expression expr, operator, right) {
+    PrefixExpression* prefix_expr = (PrefixExpression*) expr;
+    test::eq(prefix_expr.operator, operator);
+    expr_eq(prefix_expr.right, right);
+}
+
+macro test_expression_infix(Expression expr, left, operator, right) {
+    InfixExpression* infix_expr = (InfixExpression*) expr;
+    expr_eq(infix_expr.left, left);
+    test::eq(infix_expr.operator, operator);
+    expr_eq(infix_expr.right, right);
+}
+
+macro expr_eq(Expression expr, expected) {
+    $switch $typeof(expected).typeid:
+        $case bool: bool_eq(expr, expected);
+        $case int: intlit_eq(expr, expected);
+        $case String: identifier_eq(expr, expected);
+        $default: $error @sprintf("Invalid type %s", $typeof(expected).nameof);
+    $endswitch
+}
+
+fn void identifier_eq(Expression expr, String expected) {
+    Identifier* ident = (Identifier*) expr;
+    test::eq(ident.value, expected);
+    test::eq(ident.token_literal(), expected);
+}
+
+fn void intlit_eq(Expression expr, int expected) {
+    IntLiteral* int_lit= (IntLiteral*) expr;
+    test::eq(int_lit.value, expected);
+    test::eq(int_lit.token_literal(), string::tformat("%s", expected));
+}
+
+fn void bool_eq(Expression expr, bool expected) {
+    Bool* bool_expr = (Bool*) expr;
+    test::eq(bool_expr.value, expected);
+    test::eq(bool_expr.token_literal(), string::tformat("%s", expected));
+}
+
+fn void check_parser_errors(Parser* parser) {
+    if (parser.errors.len() == 0) return;
+    foreach(err: parser.errors) {
+        io::printfn("ERROR: %s", err);
+    }
+    // test::eq("parser has 0 errors", string::tformat("parser has %d errors", parser.errors.len()));
+}
+

@@ -1,0 +1,310 @@
+module parser;
+
+import std::io;
+import std::collections::anylist;
+import std::collections::list;
+import std::collections::map;
+import ast;
+import lexer;
+
+alias ParsePrefix = fn Expression(Parser*);
+alias ParseInfix = fn Expression(Parser*, Expression);
+
+struct Parser
+{
+    Allocator allocator;
+    Lexer lexer;
+    Token cur;
+    Token peek;
+    List{String} errors;
+    HashMap{TokenType, Presendence} presendences;
+    HashMap{TokenType, ParsePrefix} prefixes;
+    HashMap{TokenType, ParseInfix} infixes;
+}
+
+macro uint TokenType.hash(TokenType type) => string::tformat("%s", type).hash();
+
+fn Parser new(Lexer lexer, Allocator allocator) 
+{ 
+    HashMap{TokenType, ParsePrefix} prefixes;
+    prefixes.init(allocator);
+    HashMap{TokenType, ParseInfix} infixes;
+    infixes.init(allocator);
+
+    HashMap{TokenType, Presendence} presendences;
+    presendences.init(allocator);
+    presendences[EQ] = EQUALS;
+    presendences[NEQ] = EQUALS;
+    presendences[LT] = LESS_GREATER;
+    presendences[GT] = LESS_GREATER;
+    presendences[PLUS] = SUM;
+    presendences[MINUS] = SUM;
+    presendences[SLASH] = PRODUCT;
+    presendences[ASTERISK] = PRODUCT;
+
+    Parser p = { 
+        .allocator = allocator,
+        .lexer = lexer, 
+        .presendences = presendences,
+        .prefixes = prefixes,
+        .infixes = infixes,
+    };
+
+    p.next_token();
+    p.next_token();
+
+    p.register_prefix(IDENTIFIER, (ParsePrefix)&Parser.parse_identifier);
+    p.register_prefix(INT_LITERAL, (ParsePrefix)&Parser.parse_int_literal);
+    p.register_prefix(BANG, (ParsePrefix)&Parser.parse_prefix_expression);
+    p.register_prefix(MINUS, (ParsePrefix)&Parser.parse_prefix_expression);
+    p.register_prefix(TRUE, (ParsePrefix)&Parser.parse_bool);
+    p.register_prefix(FALSE, (ParsePrefix)&Parser.parse_bool);
+    p.register_prefix(L_PAREN, (ParsePrefix)&Parser.parse_grouped_expression);
+    p.register_prefix(IF, (ParsePrefix)&Parser.parse_if_expression);
+    p.register_prefix(ELSE, (ParsePrefix)&Parser.parse_if_expression);
+
+    p.register_infix(PLUS, (ParseInfix)&Parser.parse_infix_expression);
+    p.register_infix(MINUS, (ParseInfix)&Parser.parse_infix_expression);
+    p.register_infix(SLASH, (ParseInfix)&Parser.parse_infix_expression);
+    p.register_infix(ASTERISK, (ParseInfix)&Parser.parse_infix_expression);
+    p.register_infix(EQ, (ParseInfix)&Parser.parse_infix_expression);
+    p.register_infix(NEQ, (ParseInfix)&Parser.parse_infix_expression);
+    p.register_infix(LT, (ParseInfix)&Parser.parse_infix_expression);
+    p.register_infix(GT, (ParseInfix)&Parser.parse_infix_expression);
+
+    return p;
+}
+
+fn void Parser.register_prefix(&self, TokenType type, ParsePrefix prefix)
+{
+    self.prefixes[type] = prefix;
+}
+
+fn void Parser.register_infix(&self, TokenType type, ParseInfix infix)
+{
+    self.infixes[type] = infix;
+}
+
+fn void Parser.next_token(&self)
+{
+    self.cur = self.peek;
+    self.peek = self.lexer.next();
+}
+
+fn Program Parser.parse_program(&self)
+{
+    List{Statement} stmts;
+    stmts.init(self.allocator);
+
+    while (self.cur.type != EOF) {
+        switch (self.cur.type) {
+            case INT: 
+                IntStatement* stmt = self.parse_int_stmt();
+                if (stmt != null) stmts.push(stmt);
+            case RETURN:
+                ReturnStatement* stmt = self.parse_return_stmt();
+                if (stmt != null) stmts.push(stmt);
+            default:
+                ExpressionStatement* stmt = self.parse_expression_stmt();
+                if (stmt != null) stmts.push(stmt);
+        }
+        self.next_token();
+    }
+    return { stmts };
+}
+
+fn IntStatement* Parser.parse_int_stmt(&self)
+{
+    IntStatement* stmt = allocator::new(self.allocator, IntStatement, { .token = self.cur });
+    if (!self.expect_peek(IDENTIFIER)) return null;
+    stmt.name = { self.cur, self.cur.literal };
+    if (!self.expect_peek(ASSIGN)) return null;
+    while (!self.cur_token_is(SEMICOLON)) self.next_token();
+    return stmt;
+}
+
+fn ReturnStatement* Parser.parse_return_stmt(&self)
+{
+    ReturnStatement* stmt = allocator::new(self.allocator, ReturnStatement, { .token = self.cur });
+    self.next_token();
+    while (!self.cur_token_is(SEMICOLON)) self.next_token();
+    return stmt;
+}
+
+fn ExpressionStatement* Parser.parse_expression_stmt(&self)
+{
+    ExpressionStatement* stmt = allocator::new(self.allocator, ExpressionStatement, { .token = self.cur }); 
+    stmt.expression = self.parse_expression(LOWEST);
+    while(self.peek_token_is(SEMICOLON)) self.next_token();
+    return stmt;
+}
+
+fn Expression Parser.parse_expression(&self, Presendence presendence)
+{
+    if (try fn_parse_prefix = self.prefixes[self.cur.type]) {
+        Expression left_expr = fn_parse_prefix(self);
+
+        while(!self.peek_token_is(SEMICOLON) && presendence.ordinal < self.peek_presendence().ordinal) {
+            if (try fn_parse_infix = self.infixes[self.peek.type]) {
+                self.next_token();
+                left_expr = fn_parse_infix(self, left_expr);
+            } else {
+                return left_expr;
+            }
+        }
+        return left_expr;
+    } 
+    self.no_parse_prefix_error(self.cur.type);
+    return null; 
+}
+
+fn Expression Parser.parse_identifier(&self)
+{
+    Identifier* ident = allocator::new(self.allocator, Identifier, {
+        .token = self.cur, 
+        .value = self.cur.literal,
+    });
+    return (Expression) ident;
+}
+
+fn Expression Parser.parse_int_literal(&self)
+{
+    IntLiteral* ident = allocator::new(self.allocator, IntLiteral, {
+        .token = self.cur, 
+        .value = self.cur.literal.to_int()!!,
+    });
+    return (Expression) ident;
+}
+
+fn Expression Parser.parse_bool(&self)
+{
+    Bool* expr = allocator::new(self.allocator, Bool, {
+        .token = self.cur,
+        .value = self.cur_token_is(TRUE),
+    });
+    return (Expression) expr;
+}
+
+fn Expression Parser.parse_prefix_expression(&self)
+{
+    PrefixExpression* prefix = allocator::new(self.allocator, PrefixExpression, {
+        .token = self.cur, 
+        .operator = self.cur.literal,
+    });
+    self.next_token();
+    prefix.right = self.parse_expression(PREFIX);
+    return (Expression) prefix;
+}
+
+fn Expression Parser.parse_infix_expression(&self, Expression left_expr)
+{
+    InfixExpression* infix = allocator::new(self.allocator, InfixExpression, {
+        .token = self.cur, 
+        .operator = self.cur.literal,
+        .left = left_expr,
+    });
+    Presendence pres = self.cur_presendence();
+    self.next_token();
+    infix.right = self.parse_expression(pres);
+    return (Expression) infix;
+}
+
+fn Expression Parser.parse_grouped_expression(&self)
+{
+    self.next_token();
+    Expression expr = self.parse_expression(LOWEST);
+    if (!self.expect_peek(R_PAREN)) return null;
+    return expr;
+}
+
+fn Expression Parser.parse_if_expression(&self)
+{
+    If* expr = allocator::new(self.allocator, If, {
+        .token = self.cur, 
+    });
+    if (!self.expect_peek(L_PAREN)) return null;
+    self.next_token();
+    expr.condition = self.parse_expression(LOWEST);
+    if (!self.expect_peek(R_PAREN)) return null;
+    if (!self.expect_peek(L_BRACE)) return null;
+    expr.consequence = self.parse_block_statement();
+    if (self.peek_token_is(ELSE)) {
+        self.next_token();
+        if (!self.expect_peek(L_BRACE)) return null;
+        expr.alternative = self.parse_block_statement();
+    }
+    return (Expression) expr;
+}
+
+fn BlockStatement* Parser.parse_block_statement(&self)
+{
+    Token token = self.cur;
+    List{Statement} stmts;
+    stmts.init(self.allocator);
+
+    self.next_token();
+    while(!self.cur_token_is(R_BRACE) && !self.cur_token_is(EOF)) {
+        switch (self.cur.type) {
+            case INT: 
+                IntStatement* stmt = self.parse_int_stmt();
+                if (stmt != null) stmts.push(stmt);
+            case RETURN:
+                ReturnStatement* stmt = self.parse_return_stmt();
+                if (stmt != null) stmts.push(stmt);
+            default:
+                ExpressionStatement* stmt = self.parse_expression_stmt();
+                if (stmt != null) stmts.push(stmt);
+        }
+        self.next_token();
+    }
+
+    return allocator::new(self.allocator, BlockStatement, {
+        .token = token,
+        .statements = stmts,
+    });
+}
+
+fn bool Parser.expect_peek(&self, TokenType type)
+{
+    if (self.peek_token_is(type)) {
+        self.next_token();
+        return true;
+    }
+    self.peek_error(type);
+    return false;
+}
+
+fn Presendence Parser.peek_presendence(&self)
+{
+    if (try pres = self.presendences[self.peek.type]) return pres;
+    return LOWEST;
+}
+
+fn Presendence Parser.cur_presendence(&self)
+{
+    if (try pres = self.presendences[self.cur.type]) return pres;
+    return LOWEST;
+}
+
+fn bool Parser.peek_token_is(&self, TokenType type) => self.peek.type == type;
+fn bool Parser.cur_token_is(&self, TokenType type) => self.cur.type == type;
+
+fn void Parser.peek_error(&self, TokenType type)
+{
+    self.errors.push(string::tformat("expected next token to be %s, but got %s", type, self.peek.type));
+}
+
+fn void Parser.no_parse_prefix_error(&self, TokenType type)
+{
+    self.errors.push(string::tformat("no PrefixParse function for %s found", type.literal));
+}
+
+enum Presendence {
+    LOWEST,
+    EQUALS,       // ==
+    LESS_GREATER, // > or <
+    SUM,          // +
+    PRODUCT,      // *
+    PREFIX,       // -X or !X
+    CALL          // myFunction(X)
+}
