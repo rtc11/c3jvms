@@ -63,16 +63,13 @@ fn void expression_fn0() @test {
 
 fn void expression_fn1() @test {
     Fn* expr = (Fn*) expression(`fn (x) {}`);
-    test::eq(1, expr.parameters.len());
-    identifier_eq(&expr.parameters[0], "x");
+    fn_eq(expr, "x");
     test::eq(0, expr.body.statements.len());
 }
 
 fn void expression_fn2() @test {
     Fn* expr = (Fn*) expression(`fn (x, y) { x + y };`); // TODO: this should work fn( vs fn (
-    test::eq(2, expr.parameters.len());
-    identifier_eq(&expr.parameters[0], "x");
-    identifier_eq(&expr.parameters[1], "y");
+    fn_eq(expr, "x", "y");
     test::eq(1, expr.body.statements.len());
     ExpressionStatement* body_stmt = (ExpressionStatement*) expr.body.statements[0];
     test_expression_infix(body_stmt.expression, "x", "+", "y");
@@ -80,10 +77,7 @@ fn void expression_fn2() @test {
 
 fn void expression_fn3() @test {
     Fn* expr = (Fn*) expression(`fn (x, y, z) {};`); 
-    test::eq(3, expr.parameters.len());
-    identifier_eq(&expr.parameters[0], "x");
-    identifier_eq(&expr.parameters[1], "y");
-    identifier_eq(&expr.parameters[2], "z");
+    fn_eq(expr, "x", "y", "z");
     test::eq(0, expr.body.statements.len());
 }
 
@@ -118,7 +112,7 @@ fn void expression_infix() @test {
 }
 
 fn void operator_presendence() @test {
-    StrTuple[21] cases = { 
+    StrTuple[24] cases = { 
         {"-a * b",  "((-a) * b)"},
         {"!-a",  "(!(-a))"},
         {"a + b + c",  "((a + b) + c)"},
@@ -140,6 +134,9 @@ fn void operator_presendence() @test {
         { "2 / (5 + 5)", "(2 / (5 + 5))" },
         { "-(5 + 5)", "(-(5 + 5))" },
         { "!(true == true;)", "(!(true == true))" }, // TODO: remove semicolon when L_PAREN presendence is implemented
+        { "a + add(b * c) + d", "((a + add((b * c))) + d)" },
+        { "add(a, b, 1, 2 * 3, 4 + 5, add(6, 7 * 8))", "add(a, b, 1, (2 * 3), (4 + 5), add(6, (7 * 8)))" },
+        { "add(a + b + c * d / f + g)", "add((((a + b) + ((c * d) / f)) + g))" },
     };
     for(int i = 0; i < cases.len; i++) {
         Lexer lexer = lexer::new(cases[i][0]);
@@ -159,6 +156,12 @@ fn Expression expression(String input) {
     Statement stmt = prog.statements[0];
     ExpressionStatement* expr_stmt = (ExpressionStatement*) stmt;
     return expr_stmt.expression;
+}
+
+macro fn_eq(Expression expr, ...) {
+    Fn* fn_expr = (Fn*) expr;
+    String[*] args = { $vasplat };
+    foreach(i, arg: args) identifier_eq(&fn_expr.parameters[i], arg);
 }
 
 macro test_expression_prefix(Expression expr, operator, right) {
