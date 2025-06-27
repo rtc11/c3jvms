@@ -122,7 +122,9 @@ fn IntStatement* Parser.parse_int_stmt(&self)
     if (!self.expect_peek(IDENTIFIER)) return null;
     stmt.name = { self.cur, self.cur.literal };
     if (!self.expect_peek(ASSIGN)) return null;
-    while (!self.cur_token_is(SEMICOLON)) self.next_token();
+    self.next_token();
+    stmt.value = self.parse_expression(LOWEST);
+    if (self.peek_token_is(SEMICOLON)) self.next_token();
     return stmt;
 }
 
@@ -130,7 +132,8 @@ fn ReturnStatement* Parser.parse_return_stmt(&self)
 {
     ReturnStatement* stmt = allocator::new(self.allocator, ReturnStatement, { .token = self.cur });
     self.next_token();
-    while (!self.cur_token_is(SEMICOLON)) self.next_token();
+    stmt.return_value = self.parse_expression(LOWEST);
+    if (self.peek_token_is(SEMICOLON)) self.next_token();
     return stmt;
 }
 

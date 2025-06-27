@@ -7,11 +7,21 @@ import std::collections::list;
 alias StrTuple = String[2];
 
 fn void statement_int() @test {
+    IntStatement* stmt = stmt_int("int num = 10;");
+    int_eq(stmt, "num", 10);
+}
+
+fn IntStatement* stmt_int(String input) {
     Lexer lexer = lexer::new(`int num = 10;`);
     Parser parser = parser::new(lexer, allocator::temp());
     Program prog = parser.parse_program();
-    any stmt = prog.statements[0];
-    test::eq(((IntStatement*) stmt).token_literal(), "int");
+    return (IntStatement*) prog.statements[0];
+}
+
+macro int_eq(IntStatement* stmt, String expect_name, expect_expr) {
+    test::eq(stmt.token_literal(), "int");
+    test::eq(stmt.name.value, expect_name);
+    expr_eq(stmt.value, expect_expr);
 }
 
 fn void statement_return() @test {
