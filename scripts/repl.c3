@@ -1,21 +1,59 @@
 module repl;
 
 import std::io;
-import lexer;
+import std::math::random;
+import lexer, parser, ast;
 
 fn void main()
 {
+    print_logo();
     while (true)
     {
         io::printf("$ ");
         String input = io::readline(allocator::heap())!!;
         Lexer lexer = lexer::new(input);
+        Parser parser = parser::new(lexer, allocator::heap());
+        Program program = parser.parse_program();
 
-        while(lexer.has_next())
-        {
-            Token token = lexer.next();
-            io::printfn("%s", token);
-            if (token.type == ILLEGAL) break;
+        if (parser.errors.len() != 0) {
+            foreach (err: parser.errors) {
+                io::printfn("\t%s", colorize_red(string::tformat("%s", err)));
+            }
         }
+
+        io::printfn("%s", colorize_str(string::tformat("%s", program)));
     }
 }
+
+fn void print_logo() {
+    String logo = colorize_chars(
+`  __  repl thx        
+_/  |_ ___.__.
+\   __<   |  |
+ |  |  \___  |
+ |__|  / ____|
+       \/ v 0.1`);
+    io::printfn("%s", logo);
+}
+
+const String RESET_COLOR = "\x1b[0m";
+alias Color = int[3];
+
+fn String colorize_chars(String str) {
+    DString out;
+    out.tinit();
+    foreach(ch: str) {
+        Color color = { rand(150)+50, rand(150)+50,rand(150)+50 };
+        out.append(string::tformat("\x1b[38;2;%d;%d;%d;m%c%s", color[0], color[1], color[2], ch, RESET_COLOR));
+    }
+    return out.str_view();
+} 
+
+fn String colorize_red(String str) {
+    return string::tformat("\x1b[38;2;%d;%d;%d;m%s%s", 220, 20, 60, str, RESET_COLOR);
+}
+fn String colorize_str(String str) {
+    Color color = { rand(150)+50, rand(150)+50,rand(150)+50 };
+    return string::tformat("\x1b[38;2;%d;%d;%d;m%s%s", color[0], color[1], color[2], str, RESET_COLOR);
+} 
+
