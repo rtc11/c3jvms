@@ -48,15 +48,15 @@ fn usz? Identifier.to_format(&self, Formatter* f) @dynamic {
     return f.printf("%s", self.value);
 }
 
-struct IntStatement (Statement)
+struct I32Stmt (Statement)
 {
     Token token;
     Identifier name;
     Expression value;
 }
-fn void IntStatement.statement_node(&self) @dynamic {}
-fn String IntStatement.token_literal(&self) @dynamic => self.token.literal;
-fn usz? IntStatement.to_format(&self, Formatter* f) @dynamic {
+fn void I32Stmt.statement_node(&self) @dynamic {}
+fn String I32Stmt.token_literal(&self) @dynamic => self.token.literal;
+fn usz? I32Stmt.to_format(&self, Formatter* f) @dynamic {
     if (self.value == null) return f.printf("%s %s = null;", self.token_literal(), self.name);
     return f.printf("%s %s = %s;", self.token_literal(), self.name, self.value);
 }

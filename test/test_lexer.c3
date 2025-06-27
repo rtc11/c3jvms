@@ -13,9 +13,9 @@ fn void literal_fn()
 
 fn void literal_int()
 {
-    String code = `int`;
+    String code = `i32`;
     Lexer lexer = lexer::new(code);
-    test::eq(lexer.next().type, TokenType.INT);
+    test::eq(lexer.next().type, TokenType.I32);
 }
 
 fn void literal_semicolon()

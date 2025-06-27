@@ -12,8 +12,8 @@ fn void to_format() @test
         .token = { IDENTIFIER, "another" },
         .value = "another",
     }); 
-    IntStatement* stmt = allocator::new(allocator::temp(), IntStatement, { 
-        .token = { INT, "int" },
+    I32Stmt* stmt = allocator::new(allocator::temp(), I32Stmt, { 
+        .token = { I32, "i32" },
         .name = { 
             .token = { IDENTIFIER, "my" },
             .value = "my" 
@@ -23,5 +23,5 @@ fn void to_format() @test
 
     stmts.push(stmt);
     Program p = { stmts };
-    test::eq(string::tformat("%s", p), "int my = another;");
+    test::eq(string::tformat("%s", p), "i32 my = another;");
 }

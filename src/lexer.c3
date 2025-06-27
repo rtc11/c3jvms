@@ -80,7 +80,7 @@ fn Token Lexer.next(&self)
     }
     switch (token.type) {
         case IDENTIFIER:
-        case INT: 
+        case I32: 
         case INT_LITERAL:
             break; 
         default: self.read_char(); // needed for single-char tokens
@@ -123,10 +123,10 @@ fn Token Lexer.read_identifier(&self)
 {
     DString str;
     str.tinit();
-    str.append(self.ch); // first is already a identifier at this point
+    str.append(self.ch);
 
     self.read_char();
-    while(self.ch.is_alpha()) {
+    while(self.ch.is_alpha() || self.ch.is_digit()) {
         str.append(self.ch);
         self.read_char();
     }
@@ -136,7 +136,7 @@ fn Token Lexer.read_identifier(&self)
     switch (identifier)
     {
         case "fn": return {FN, identifier};  
-        case "int": return {INT, identifier};  
+        case "i32": return {I32, identifier};  
         case "true": return {TRUE, identifier};  
         case "false": return {FALSE, identifier};  
         case "return": return {RETURN, identifier};  
@@ -179,7 +179,7 @@ enum TokenType : (String literal)
     NEQ         = "!=",
 
     ASSIGN      = "=",
-    INT         = "int", // keyword int
+    I32         = "i32", // keyword int
     INT_LITERAL = "",    // interger literal like "42"
     FN          = "fn",
     IF          = "if",
