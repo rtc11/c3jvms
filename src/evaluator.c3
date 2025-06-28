@@ -6,6 +6,10 @@ import object, ast;
 
 faultdef INVALID;
 
+const BoolObj TRUE = { .value = true };
+const BoolObj FALSE = { .value = false };
+const NullObj NULL = {};
+
 fn Object? eval(Node node, Allocator allocator)
 {
     switch (node.type)
@@ -16,6 +20,8 @@ fn Object? eval(Node node, Allocator allocator)
             return eval(((ExpressionStatement*) node).expression, allocator);
         case IntLiteral: 
             return allocator::new(allocator, I32Obj, { .value = ((IntLiteral*) node).value });
+        case Bool:
+            return ((Bool*) node).value ? &TRUE : &FALSE;
         default: 
             return INVALID?;
     }
