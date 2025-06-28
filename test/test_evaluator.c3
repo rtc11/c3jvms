@@ -58,6 +58,28 @@ fn void operator_bang() @test {
     bool_obj_eq(test_eval("!!5"), true);
 }
 
+fn void eval_expression_if_else() @test {
+    if_else_eq(test_eval("if (true) { 10 }"), 10);
+    if_else_eq(test_eval("if (true) { 10 }"), 10);
+    if_else_eq(test_eval("if (false) { 10 }"), null);
+    if_else_eq(test_eval("if (1) { 10 }"), 10);
+    if_else_eq(test_eval("if (1 < 2) { 10 }"), 10);
+    if_else_eq(test_eval("if (1 > 2) { 10 }"), null);
+    if_else_eq(test_eval("if (1 < 2) { 10 } else { 20 }"), 10);
+    if_else_eq(test_eval("if (1 > 2) { 10 } else { 20 }"), 20);
+}
+
+macro if_else_eq(Object obj, expected) {
+    $switch $typeof(expected).typeid:
+        $case int: i32_obj_eq(obj, expected);
+        $default: null_eq(obj);
+    $endswitch
+}
+
+fn void null_eq(Object obj) {
+    test::eq(obj.obj_type(), ObjectType.NULL);
+}
+
 fn Object test_eval(String input) {
     Lexer lexer = lexer::new(input);
     Parser parser = parser::new(lexer, allocator::temp());

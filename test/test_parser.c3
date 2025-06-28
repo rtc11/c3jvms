@@ -78,7 +78,7 @@ fn void expression_fn1() @test {
 }
 
 fn void expression_fn2() @test {
-    Fn* expr = (Fn*) expression(`fn (x, y) { x + y };`); // TODO: this should work fn( vs fn (
+    Fn* expr = (Fn*) expression(`fn(x, y) { x + y };`);
     fn_eq(expr, "x", "y");
     test::eq(1, expr.body.statements.len());
     ExpressionStatement* body_stmt = (ExpressionStatement*) expr.body.statements[0];
@@ -143,7 +143,7 @@ fn void operator_presendence() @test {
         { "(5 + 5) * 2", "((5 + 5) * 2)" },
         { "2 / (5 + 5)", "(2 / (5 + 5))" },
         { "-(5 + 5)", "(-(5 + 5))" },
-        { "!(true == true;)", "(!(true == true))" }, // TODO: remove semicolon when L_PAREN presendence is implemented
+        { "!(true == true)", "(!(true == true))" },
         { "a + add(b * c) + d", "((a + add((b * c))) + d)" },
         { "add(a, b, 1, 2 * 3, 4 + 5, add(6, 7 * 8))", "add(a, b, 1, (2 * 3), (4 + 5), add(6, (7 * 8)))" },
         { "add(a + b + c * d / f + g)", "add((((a + b) + ((c * d) / f)) + g))" },

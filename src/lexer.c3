@@ -60,8 +60,8 @@ fn Token Lexer.next(&self)
                 default: token = { ASSIGN, "=" };
             }
         case '\'': token = { QUOTE, "\"" };
-        case '\n':
-        case '\r': token = self.next();
+        // case '\n':
+        // case '\r': token = self.next();
         case '\0': token = { EOF, "" };
         case ':':
             switch (self.peek()) {
@@ -82,6 +82,12 @@ fn Token Lexer.next(&self)
         case IDENTIFIER:
         case I32: 
         case INT_LITERAL:
+        case FN:
+        case TRUE:
+        case FALSE:
+        case RETURN:
+        case IF:
+        case ELSE:
             break; 
         default: self.read_char(); // needed for single-char tokens
     }
@@ -126,7 +132,7 @@ fn Token Lexer.read_identifier(&self)
     str.append(self.ch);
 
     self.read_char();
-    while(self.ch.is_alpha() || self.ch.is_digit()) {
+    while(self.ch.is_alnum() || self.ch == '_') {
         str.append(self.ch);
         self.read_char();
     }

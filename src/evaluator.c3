@@ -4,11 +4,12 @@ import std::io;
 import std::collections::list;
 import object, ast;
 
-faultdef INVALID_OBJECT;
 
 const BoolObj TRUE = { .value = true };
 const BoolObj FALSE = { .value = false };
 const NullObj NULL = {};
+
+faultdef UNKNOWN_NODE;
 
 fn Object? eval(Node node, Allocator allocator)
 {
@@ -31,8 +32,15 @@ fn Object? eval(Node node, Allocator allocator)
             Object left = eval(infix_expr.left, allocator)!!;
             Object right = eval(infix_expr.right, allocator)!!;
             return eval_infix_expr(infix_expr.operator, left, right, allocator);
+        case BlockStatement:
+            BlockStatement* block = (BlockStatement*) node;
+            return eval_stmts(block.statements, allocator);
+        case If:
+            If* if_expr = (If*) node;
+            return eval_expr_if(if_expr, allocator);
         default: 
-            return INVALID_OBJECT?;
+            io::printfn("ERROR: Unknown node %s", node);
+            return UNKNOWN_NODE?;
     }
 }
 
@@ -49,7 +57,7 @@ fn Object? eval_expr_prefix(String operator, Object right, Allocator allocator)
     {
         case "!": return eval_expr_operator_bang(right);
         case "-": return eval_expr_operator_minus(right, allocator);
-        default: return INVALID_OBJECT?;
+        default: return &NULL;
     }
 }
 
@@ -63,11 +71,11 @@ fn Object? eval_infix_expr(String operator, Object left, Object right, Allocator
             return left == right ? &TRUE : &FALSE;
         case operator == "!=":
             return left != right ? &TRUE : &FALSE;
-        default: return INVALID_OBJECT?;
+        default: return &NULL;
     }
 }
 
-fn Object? eval_expr_infix_i32(String operator, Object left, Object right, Allocator a)
+fn Object eval_expr_infix_i32(String operator, Object left, Object right, Allocator a)
 {
     int lval = ((I32Obj*) left).value;
     int rval = ((I32Obj*) right).value;
@@ -81,7 +89,7 @@ fn Object? eval_expr_infix_i32(String operator, Object left, Object right, Alloc
         case ">": return lval > rval ? &TRUE : &FALSE;
         case "==": return lval == rval  ? &TRUE : &FALSE;
         case "!=": return lval != rval ? &TRUE : &FALSE;
-        default: return INVALID_OBJECT?;
+        default: return &NULL;
     }
 }
 
@@ -96,9 +104,32 @@ fn Object eval_expr_operator_bang(Object right)
     }
 }
 
-fn Object? eval_expr_operator_minus(Object right, Allocator allocator)
+fn Object eval_expr_operator_minus(Object right, Allocator allocator)
 {
-    if (right.obj_type() != I32) return INVALID_OBJECT?;
+    if (right.obj_type() != I32) return &NULL;
     int value = ((I32Obj*) right).value;
     return allocator::new(allocator, I32Obj, { .value = -value });
+}
+
+fn Object? eval_expr_if(If* expr, Allocator allocator)
+{
+    Object condition = eval(expr.condition, allocator)!!;
+    if (is_truthy(condition)) {
+        return eval(expr.consequence, allocator);
+    } else if (expr.alternative != null) {
+        return eval(expr.alternative, allocator);
+    } else {
+        return &NULL;
+    }
+}
+
+fn bool is_truthy(Object obj)
+{
+    switch (obj.ptr) 
+    {
+        case &NULL: return false;
+        case &TRUE: return true;
+        case &FALSE: return false;
+        default: return true;
+    }
 }
