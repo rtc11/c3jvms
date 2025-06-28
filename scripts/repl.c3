@@ -2,7 +2,7 @@ module repl;
 
 import std::io;
 import std::math::random;
-import lexer, parser, ast;
+import lexer, parser, ast, evaluator;
 
 fn void main()
 {
@@ -21,7 +21,9 @@ fn void main()
             }
         }
 
-        io::printfn("%s", colorize_str(string::tformat("%s", program)));
+        if (try evaluated = evaluator::eval(&program, allocator::heap())) {
+            io::printfn("%s", colorize_str(string::tformat("%s", evaluated.inspect())));
+        }
     }
 }
 
