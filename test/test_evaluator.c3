@@ -4,13 +4,25 @@ import std::io;
 import std::collections::list;
 import evaluator, object, ast, parser, lexer;
 
-fn void expression_eval_i32() @test {
+fn void eval_expression_i32() @test {
     i32_obj_eq(test_eval("5")!!, 5);
+    i32_obj_eq(test_eval("10")!!, 10);
+    i32_obj_eq(test_eval("-5")!!, -5);
+    i32_obj_eq(test_eval("-10")!!, -10);
 }
 
-fn void expression_eval_bool() @test {
+fn void eval_expression_bool() @test {
     bool_obj_eq(test_eval("true")!!, true);
     bool_obj_eq(test_eval("false")!!, false);
+}
+
+fn void operator_bang() @test {
+    bool_obj_eq(test_eval("!true")!!, false);
+    bool_obj_eq(test_eval("!false")!!, true);
+    bool_obj_eq(test_eval("!5")!!, false);
+    bool_obj_eq(test_eval("!!true")!!, true);
+    bool_obj_eq(test_eval("!!false")!!, false);
+    bool_obj_eq(test_eval("!!5")!!, true);
 }
 
 fn Object? test_eval(String input) {
