@@ -20,12 +20,12 @@ interface Expression: Node
     fn void expression_node();
 }
 
-struct Program
+struct Program (Node)
 {
     List{Statement} statements;
 }
 
-fn String Program.token_literal(&self) {
+fn String Program.token_literal(&self) @dynamic {
     if (self.statements.size > 0) {
         return self.statements[0].token_literal();
     }
