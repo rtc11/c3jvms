@@ -103,11 +103,11 @@ fn Object test_eval(String input) {
 }
 
 fn void i32_obj_eq(Object obj, int expected) {
-    I32Obj* res = (I32Obj*) obj;
+    object::Int32* res = (object::Int32*) obj;
     test::eq(expected, res.value);
 }
 
 fn void bool_obj_eq(Object obj, bool expected) {
-    BoolObj* res = (BoolObj*) obj;
+    object::Bool* res = (object::Bool*) obj;
     test::eq(expected, res.value);
 }

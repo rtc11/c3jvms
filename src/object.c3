@@ -16,26 +16,26 @@ enum ObjectType
     RETURN_VALUE,
 }
 
-struct I32Obj (Object)
+struct Int32 (Object)
 {
     int value;
 }
-fn String I32Obj.inspect(&self) @dynamic => string::tformat("%d", self.value);
-fn ObjectType I32Obj.obj_type(&self) @dynamic => I32;
+fn String Int32.inspect(&self) @dynamic => string::tformat("%d", self.value);
+fn ObjectType Int32.obj_type(&self) @dynamic => I32;
 
-struct BoolObj (Object)
+struct Bool (Object)
 {
     bool value;
 }
-fn String BoolObj.inspect(&self) @dynamic => string::tformat("%s", self.value);
-fn ObjectType BoolObj.obj_type(&self) @dynamic => BOOL;
+fn String Bool.inspect(&self) @dynamic => string::tformat("%s", self.value);
+fn ObjectType Bool.obj_type(&self) @dynamic => BOOL;
 
-struct NullObj (Object)
+struct Null (Object)
 {
     void* value;
 }
-fn String NullObj.inspect(&self) @dynamic => string::tformat("null");
-fn ObjectType NullObj.obj_type(&self) @dynamic => NULL;
+fn String Null.inspect(&self) @dynamic => string::tformat("null");
+fn ObjectType Null.obj_type(&self) @dynamic => NULL;
 
 struct Return (Object)
 {

@@ -5,9 +5,9 @@ import std::collections::list;
 import object, ast;
 
 
-const BoolObj TRUE = { .value = true };
-const BoolObj FALSE = { .value = false };
-const NullObj NULL = {};
+const object::Bool TRUE = { .value = true };
+const object::Bool FALSE = { .value = false };
+const object::Null NULL = {};
 
 faultdef UNKNOWN_NODE;
 
@@ -20,11 +20,11 @@ fn Object? eval(Node node, Allocator allocator)
         case ExpressionStatement: 
             return eval(((ExpressionStatement*) node).expression, allocator);
         case IntLiteral: 
-            return allocator::new(allocator, I32Obj, { 
+            return allocator::new(allocator, Int32, { 
                 .value = ((IntLiteral*) node).value 
             });
-        case Bool: 
-            return ((Bool*) node).value ? &TRUE : &FALSE;
+        case ast::Bool: 
+            return ((ast::Bool*) node).value ? &TRUE : &FALSE;
         case PrefixExpression:
             PrefixExpression* prefix_expr = (PrefixExpression*) node;
             Object right = eval(prefix_expr.right, allocator)!!;
@@ -95,14 +95,14 @@ fn Object? eval_infix_expr(String operator, Object left, Object right, Allocator
 
 fn Object eval_expr_infix_i32(String operator, Object left, Object right, Allocator a)
 {
-    int lval = ((I32Obj*) left).value;
-    int rval = ((I32Obj*) right).value;
+    int lval = ((Int32*) left).value;
+    int rval = ((Int32*) right).value;
     switch (operator)
     {
-        case "+": return allocator::new(a, I32Obj, { .value = lval + rval });
-        case "-": return allocator::new(a, I32Obj, { .value = lval - rval });
-        case "*": return allocator::new(a, I32Obj, { .value = lval * rval });
-        case "/": return allocator::new(a, I32Obj, { .value = lval / rval });
+        case "+": return allocator::new(a, Int32, { .value = lval + rval });
+        case "-": return allocator::new(a, Int32, { .value = lval - rval });
+        case "*": return allocator::new(a, Int32, { .value = lval * rval });
+        case "/": return allocator::new(a, Int32, { .value = lval / rval });
         case "<": return lval < rval ? &TRUE : &FALSE;
         case ">": return lval > rval ? &TRUE : &FALSE;
         case "==": return lval == rval  ? &TRUE : &FALSE;
@@ -125,8 +125,8 @@ fn Object eval_expr_operator_bang(Object right)
 fn Object eval_expr_operator_minus(Object right, Allocator allocator)
 {
     if (right.obj_type() != I32) return &NULL;
-    int value = ((I32Obj*) right).value;
-    return allocator::new(allocator, I32Obj, { .value = -value });
+    int value = ((Int32*) right).value;
+    return allocator::new(allocator, Int32, { .value = -value });
 }
 
 fn Object? eval_expr_if(If* expr, Allocator allocator)
