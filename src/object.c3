@@ -1,6 +1,7 @@
 module object;
 
 import std::io;
+import ascii;
 
 interface Object
 {
@@ -8,12 +9,15 @@ interface Object
     fn String inspect();
 }
 
+fn bool Object.is_err(&self) => self.obj_type() == ERROR;
+
 enum ObjectType
 {
     I32,
     BOOL,
     NULL,
     RETURN_VALUE,
+    ERROR,
 }
 
 struct Int32 (Object)
@@ -43,3 +47,10 @@ struct Return (Object)
 }
 fn String Return.inspect(&self) @dynamic => string::tformat("%s", self.value.inspect());
 fn ObjectType Return.obj_type(&self) @dynamic => RETURN_VALUE;
+
+struct Error (Object)
+{
+    String message;
+}
+fn String Error.inspect(&self) @dynamic => string::tformat("%s: %s", ascii::colorize_red("ERROR"), self.message);
+fn ObjectType Error.obj_type(&self) @dynamic => ERROR;

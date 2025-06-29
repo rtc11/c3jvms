@@ -26,6 +26,10 @@ fn void print_expr_stmt(Program p) {
     io::printfn("%s\n%s", p, colorize(from_expr(stmt.expression)));
 }
 
+fn String colorize_red(String str) {
+    return string::tformat("\x1b[38;2;%d;%d;%d;m%s%s", 220, 20, 60, str, RESET_COLOR);
+}
+
 fn String from_expr(Expression expr) {
     AsciiNode node = render(expr);
     return join(node.lines, "\n");

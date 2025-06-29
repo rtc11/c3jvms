@@ -84,6 +84,28 @@ fn void eval_stmt_return() @test {
     `), 10);
 }
 
+fn void error_handling() @test {
+    err_eq(test_eval("5 + true;"), "type mismatch: I32 + BOOL");
+    err_eq(test_eval("5 + true; 5;"), "type mismatch: I32 + BOOL");
+    err_eq(test_eval("-true"), "unknown operator: -BOOL");
+    err_eq(test_eval("true + false;"), "unknown operator: BOOL + BOOL");
+    err_eq(test_eval("5; true + false; 5"), "unknown operator: BOOL + BOOL");
+    err_eq(test_eval("if (10 > 1) { true + false; }"), "unknown operator: BOOL + BOOL");
+    err_eq(test_eval(`
+        if (10 > 1) {
+            if (10 > 1) {
+                return true + false;
+            }
+            return 1;
+        }
+    `), "unknown operator: BOOL + BOOL");
+}
+
+fn void err_eq(Object obj, String err_msg){
+    Error* err_obj = (Error*) obj;
+    test::eq(err_msg, err_obj.message);
+}
+
 macro if_else_eq(Object obj, expected) {
     $switch $typeof(expected).typeid:
         $case int: i32_obj_eq(obj, expected);
