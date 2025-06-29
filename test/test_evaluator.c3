@@ -69,6 +69,21 @@ fn void eval_expression_if_else() @test {
     if_else_eq(test_eval("if (1 > 2) { 10 } else { 20 }"), 20);
 }
 
+fn void eval_stmt_return() @test {
+    i32_obj_eq(test_eval("return 10;"), 10);
+    i32_obj_eq(test_eval("return 10; 9;"), 10);
+    i32_obj_eq(test_eval("return 2 * 5; 9;"), 10);
+    i32_obj_eq(test_eval("9; return 2 * 5; 9;"), 10);
+    i32_obj_eq(test_eval(`
+        if (10 > 1) {
+            if (10 > 1) {
+                return 10;
+            }
+            return 1;
+        }
+    `), 10);
+}
+
 macro if_else_eq(Object obj, expected) {
     $switch $typeof(expected).typeid:
         $case int: i32_obj_eq(obj, expected);

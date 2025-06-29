@@ -16,7 +16,7 @@ fn Object? eval(Node node, Allocator allocator)
     switch (node.type)
     {
         case Program: 
-        	return eval_stmts(((Program*) node).statements, allocator);
+        	return eval_program(((Program*) node), allocator);
         case ExpressionStatement: 
             return eval(((ExpressionStatement*) node).expression, allocator);
         case IntLiteral: 
@@ -34,20 +34,41 @@ fn Object? eval(Node node, Allocator allocator)
             return eval_infix_expr(infix_expr.operator, left, right, allocator);
         case BlockStatement:
             BlockStatement* block = (BlockStatement*) node;
-            return eval_stmts(block.statements, allocator);
+            return eval_stmt_block(block, allocator);
         case If:
             If* if_expr = (If*) node;
             return eval_expr_if(if_expr, allocator);
+        case ReturnStatement:
+            ReturnStatement* stmt = (ReturnStatement*) node;
+            Object return_value = eval(stmt.return_value, allocator)!!;
+            return allocator::new(allocator, Return, { .value = return_value });
         default: 
             io::printfn("ERROR: Unknown node %s", node);
             return UNKNOWN_NODE?;
     }
 }
 
-fn Object eval_stmts(List{Statement} stmts, Allocator allocator)
+fn Object eval_program(Program* prog, Allocator allocator)
 {
     Object res;
-    foreach (stmt: stmts) res = eval(stmt, allocator)!!;
+    foreach (stmt: prog.statements) {
+        res = eval(stmt, allocator)!!;
+        if (res.obj_type() == RETURN_VALUE) {
+            return ((Return*) res).value;
+        }
+    }
+    return res;
+}
+
+fn Object eval_stmt_block(BlockStatement* block, Allocator allocator)
+{
+    Object res;
+    foreach (stmt: block.statements) {
+        res = eval(stmt, allocator)!!;
+        if (res != null && res.obj_type() == RETURN_VALUE) {
+            return res;
+        }
+    }
     return res;
 }
 

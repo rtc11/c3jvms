@@ -13,6 +13,7 @@ enum ObjectType
     I32,
     BOOL,
     NULL,
+    RETURN_VALUE,
 }
 
 struct I32Obj (Object)
@@ -36,3 +37,9 @@ struct NullObj (Object)
 fn String NullObj.inspect(&self) @dynamic => string::tformat("null");
 fn ObjectType NullObj.obj_type(&self) @dynamic => NULL;
 
+struct Return (Object)
+{
+    Object value;
+}
+fn String Return.inspect(&self) @dynamic => string::tformat("%s", self.value.inspect());
+fn ObjectType Return.obj_type(&self) @dynamic => RETURN_VALUE;
