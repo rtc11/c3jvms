@@ -16,12 +16,14 @@ fn Object? eval(Node node, Allocator allocator)
     switch (node.type)
     {
         case Program: 
-        	return eval_program(((Program*) node), allocator);
+            return eval_program(((Program*) node), allocator);
         case ExpressionStatement: 
             return eval(((ExpressionStatement*) node).expression, allocator);
         case IntLiteral: 
-            return allocator::new(allocator, I32Obj, { .value = ((IntLiteral*) node).value });
-        case Bool:
+            return allocator::new(allocator, I32Obj, { 
+                .value = ((IntLiteral*) node).value 
+            });
+        case Bool: 
             return ((Bool*) node).value ? &TRUE : &FALSE;
         case PrefixExpression:
             PrefixExpression* prefix_expr = (PrefixExpression*) node;
@@ -32,16 +34,14 @@ fn Object? eval(Node node, Allocator allocator)
             Object left = eval(infix_expr.left, allocator)!!;
             Object right = eval(infix_expr.right, allocator)!!;
             return eval_infix_expr(infix_expr.operator, left, right, allocator);
-        case BlockStatement:
-            BlockStatement* block = (BlockStatement*) node;
-            return eval_stmt_block(block, allocator);
-        case If:
-            If* if_expr = (If*) node;
-            return eval_expr_if(if_expr, allocator);
+        case BlockStatement: 
+            return eval_stmt_block((BlockStatement*) node, allocator);
+        case If: 
+            return eval_expr_if((If*) node, allocator);
         case ReturnStatement:
-            ReturnStatement* stmt = (ReturnStatement*) node;
-            Object return_value = eval(stmt.return_value, allocator)!!;
-            return allocator::new(allocator, Return, { .value = return_value });
+            return allocator::new(allocator, Return, {
+                .value = eval(((ReturnStatement*) node).return_value, allocator)!!
+            });
         default: 
             io::printfn("ERROR: Unknown node %s", node);
             return UNKNOWN_NODE?;
@@ -86,12 +86,9 @@ fn Object? eval_infix_expr(String operator, Object left, Object right, Allocator
 {
     switch 
     {
-        case left.obj_type() == I32 && right.obj_type() == I32:
-            return eval_expr_infix_i32(operator, left, right, allocator);
-        case operator == "==":
-            return left == right ? &TRUE : &FALSE;
-        case operator == "!=":
-            return left != right ? &TRUE : &FALSE;
+        case left.obj_type() == I32 && right.obj_type() == I32: return eval_expr_infix_i32(operator, left, right, allocator);
+        case operator == "==": return left == right ? &TRUE : &FALSE;
+        case operator == "!=": return left != right ? &TRUE : &FALSE;
         default: return &NULL;
     }
 }
