@@ -54,3 +54,4 @@ struct Error (Object)
 }
 fn String Error.inspect(&self) @dynamic => string::tformat("%s: %s", ascii::colorize_red("ERROR"), self.message);
 fn ObjectType Error.obj_type(&self) @dynamic => ERROR;
+

@@ -2,8 +2,7 @@ module evaluator;
 
 import std::io;
 import std::collections::list;
-import object, ast;
-
+import object, ast, environment;
 
 const object::Bool TRUE = { .value = true };
 const object::Bool FALSE = { .value = false };
@@ -13,38 +12,44 @@ faultdef UNKNOWN_NODE;
 
 macro Error* err(String format, ...) => allocator::new(allocator::temp(), Error, { .message = string::tformat(format, $vasplat) });
 
-fn Object? eval(Node node, Allocator allocator)
+fn Object? eval(Node node, Environment* env, Allocator allocator)
 {
     switch (node.type)
     {
         case Program: 
-            return eval_program(((Program*) node), allocator);
+            return eval_program(((Program*) node), env, allocator);
         case ExpressionStatement: 
-            return eval(((ExpressionStatement*) node).expression, allocator);
+            return eval(((ExpressionStatement*) node).expression, env, allocator);
         case IntLiteral: 
-            return allocator::new(allocator, Int32, { 
-                .value = ((IntLiteral*) node).value 
-            });
+            return allocator::new(allocator, Int32, { .value = ((IntLiteral*) node).value });
+        case I32Stmt:
+            I32Stmt* stmt = (I32Stmt*) node;
+            Object i = eval(stmt.value, env, allocator)!!;
+            if (i.is_err()) return i;
+            env.set(stmt.name.value, i);
+            return i;
+        case Identifier:
+            return eval_identifier((Identifier*) node, env);
         case ast::Bool: 
             return ((ast::Bool*) node).value ? &TRUE : &FALSE;
         case PrefixExpression:
             PrefixExpression* prefix_expr = (PrefixExpression*) node;
-            Object right = eval(prefix_expr.right, allocator)!!;
+            Object right = eval(prefix_expr.right, env, allocator)!!;
             if (right.is_err()) return right;
             return eval_expr_prefix(prefix_expr.operator, right, allocator);
         case InfixExpression:
             InfixExpression* infix_expr = (InfixExpression*) node;
-            Object left = eval(infix_expr.left, allocator)!!;
+            Object left = eval(infix_expr.left, env, allocator)!!;
             if (left.is_err()) return left;
-            Object right = eval(infix_expr.right, allocator)!!;
+            Object right = eval(infix_expr.right, env, allocator)!!;
             if (right.is_err()) return right;
             return eval_infix_expr(infix_expr.operator, left, right, allocator);
         case BlockStatement: 
-            return eval_stmt_block((BlockStatement*) node, allocator);
+            return eval_stmt_block((BlockStatement*) node, env, allocator);
         case If: 
-            return eval_expr_if((If*) node, allocator);
+            return eval_expr_if((If*) node, env, allocator);
         case ReturnStatement:
-            Object ret = eval(((ReturnStatement*) node).return_value, allocator)!!;
+            Object ret = eval(((ReturnStatement*) node).return_value, env, allocator)!!;
             if (ret.is_err()) return ret;
             return allocator::new(allocator, Return, { .value = ret });
         default: 
@@ -53,11 +58,11 @@ fn Object? eval(Node node, Allocator allocator)
     }
 }
 
-fn Object eval_program(Program* prog, Allocator allocator)
+fn Object eval_program(Program* prog, Environment* env, Allocator allocator)
 {
     Object res;
     foreach (stmt: prog.statements) {
-        res = eval(stmt, allocator)!!;
+        res = eval(stmt, env, allocator)!!;
         switch (res.type)
         {
             case Return: return ((Return*) res).value;
@@ -67,11 +72,18 @@ fn Object eval_program(Program* prog, Allocator allocator)
     return res;
 }
 
-fn Object eval_stmt_block(BlockStatement* block, Allocator allocator)
+fn Object eval_identifier(Identifier* ident, Environment* env)
+{
+    Object? obj = env.get(ident.value);
+    if(catch excuse = obj) return err("identifier not found: %s", ident.value);
+    return obj;
+}
+
+fn Object eval_stmt_block(BlockStatement* block, Environment* env, Allocator allocator)
 {
     Object res;
     foreach (stmt: block.statements) {
-        res = eval(stmt, allocator)!!;
+        res = eval(stmt, env, allocator)!!;
         if (res != null && res.obj_type() == RETURN_VALUE || res.obj_type() == ERROR) {
             return res;
         }
@@ -137,14 +149,14 @@ fn Object eval_expr_operator_minus(Object right, Allocator allocator)
     return allocator::new(allocator, Int32, { .value = -value });
 }
 
-fn Object? eval_expr_if(If* expr, Allocator allocator)
+fn Object? eval_expr_if(If* expr, Environment* env, Allocator allocator)
 {
-    Object condition = eval(expr.condition, allocator)!!;
+    Object condition = eval(expr.condition, env, allocator)!!;
     if (condition.is_err()) return condition;
     if (is_truthy(condition)) {
-        return eval(expr.consequence, allocator);
+        return eval(expr.consequence, env, allocator);
     } else if (expr.alternative != null) {
-        return eval(expr.alternative, allocator);
+        return eval(expr.alternative, env, allocator);
     } else {
         return &NULL;
     }

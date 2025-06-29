@@ -2,60 +2,60 @@ module test::evaluator;
 
 import std::io;
 import std::collections::list;
-import evaluator, object, ast, parser, lexer;
+import evaluator, object, ast, parser, lexer, environment;
 
 fn void eval_expression_i32() @test {
-    i32_obj_eq(test_eval("5"), 5);
-    i32_obj_eq(test_eval("10"), 10);
-    i32_obj_eq(test_eval("-5"), -5);
-    i32_obj_eq(test_eval("-10"), -10);
-    i32_obj_eq(test_eval("5 + 5 + 5 + 5 - 10"), 10);
-    i32_obj_eq(test_eval("2 * 2 * 2 * 2 * 2"), 32);
-    i32_obj_eq(test_eval("-50 + 100 + -50"), 0);
-    i32_obj_eq(test_eval("5 * 2 + 10"), 20);
-    i32_obj_eq(test_eval("5 + 2 * 10"), 25);
-    i32_obj_eq(test_eval("20 + 2 * -10"), 0);
-    i32_obj_eq(test_eval("50 / 2 * 2 + 10"), 60);
-    i32_obj_eq(test_eval("2 * (5 + 10)"), 30);
-    i32_obj_eq(test_eval("3 * 3 * 3 + 10"), 37);
-    i32_obj_eq(test_eval("3 * (3 * 3) + 10"), 37);
-    i32_obj_eq(test_eval("(5 + 10 * 2 + 15 / 3) * 2 + -10"), 50);
+    i32_eq(test_eval("5"), 5);
+    i32_eq(test_eval("10"), 10);
+    i32_eq(test_eval("-5"), -5);
+    i32_eq(test_eval("-10"), -10);
+    i32_eq(test_eval("5 + 5 + 5 + 5 - 10"), 10);
+    i32_eq(test_eval("2 * 2 * 2 * 2 * 2"), 32);
+    i32_eq(test_eval("-50 + 100 + -50"), 0);
+    i32_eq(test_eval("5 * 2 + 10"), 20);
+    i32_eq(test_eval("5 + 2 * 10"), 25);
+    i32_eq(test_eval("20 + 2 * -10"), 0);
+    i32_eq(test_eval("50 / 2 * 2 + 10"), 60);
+    i32_eq(test_eval("2 * (5 + 10)"), 30);
+    i32_eq(test_eval("3 * 3 * 3 + 10"), 37);
+    i32_eq(test_eval("3 * (3 * 3) + 10"), 37);
+    i32_eq(test_eval("(5 + 10 * 2 + 15 / 3) * 2 + -10"), 50);
 }
 
 fn void eval_expression_bool() @test {
-    bool_obj_eq(test_eval("true"), true);
-    bool_obj_eq(test_eval("false"), false);
-    bool_obj_eq(test_eval("1 < 2"), true);
-    bool_obj_eq(test_eval("1 > 2"), false);
-    bool_obj_eq(test_eval("1 < 1"), false);
-    bool_obj_eq(test_eval("1 > 1"), false);
-    bool_obj_eq(test_eval("1 == 1"), true);
-    bool_obj_eq(test_eval("1 != 1"), false);
-    bool_obj_eq(test_eval("1 == 2"), false);
-    bool_obj_eq(test_eval("1 != 2"), true);
-    bool_obj_eq(test_eval("true == true"), true);
-    bool_obj_eq(test_eval("false == false"), true);
-    bool_obj_eq(test_eval("true == false"), false);
-    bool_obj_eq(test_eval("true != false"), true);
-    bool_obj_eq(test_eval("false != true"), true);
-    bool_obj_eq(test_eval("(1 < 2) == true"), true);
-    bool_obj_eq(test_eval("(1 < 2) == false"), false);
-    bool_obj_eq(test_eval("(1 > 2) == true"), false);
-    bool_obj_eq(test_eval("(1 > 2) == false"), true);
-    bool_obj_eq(test_eval("(1 > 2) == (1 > 2)"), true);
-    bool_obj_eq(test_eval("(1 > 2) == (1 < 2)"), false);
-    bool_obj_eq(test_eval("(1 > 2) != (1 > 2)"), false);
-    bool_obj_eq(test_eval("(1 > 2) != (1 < 2)"), true);
+    bool_eq(test_eval("true"), true);
+    bool_eq(test_eval("false"), false);
+    bool_eq(test_eval("1 < 2"), true);
+    bool_eq(test_eval("1 > 2"), false);
+    bool_eq(test_eval("1 < 1"), false);
+    bool_eq(test_eval("1 > 1"), false);
+    bool_eq(test_eval("1 == 1"), true);
+    bool_eq(test_eval("1 != 1"), false);
+    bool_eq(test_eval("1 == 2"), false);
+    bool_eq(test_eval("1 != 2"), true);
+    bool_eq(test_eval("true == true"), true);
+    bool_eq(test_eval("false == false"), true);
+    bool_eq(test_eval("true == false"), false);
+    bool_eq(test_eval("true != false"), true);
+    bool_eq(test_eval("false != true"), true);
+    bool_eq(test_eval("(1 < 2) == true"), true);
+    bool_eq(test_eval("(1 < 2) == false"), false);
+    bool_eq(test_eval("(1 > 2) == true"), false);
+    bool_eq(test_eval("(1 > 2) == false"), true);
+    bool_eq(test_eval("(1 > 2) == (1 > 2)"), true);
+    bool_eq(test_eval("(1 > 2) == (1 < 2)"), false);
+    bool_eq(test_eval("(1 > 2) != (1 > 2)"), false);
+    bool_eq(test_eval("(1 > 2) != (1 < 2)"), true);
 
 }
 
 fn void operator_bang() @test {
-    bool_obj_eq(test_eval("!true"), false);
-    bool_obj_eq(test_eval("!false"), true);
-    bool_obj_eq(test_eval("!5"), false);
-    bool_obj_eq(test_eval("!!true"), true);
-    bool_obj_eq(test_eval("!!false"), false);
-    bool_obj_eq(test_eval("!!5"), true);
+    bool_eq(test_eval("!true"), false);
+    bool_eq(test_eval("!false"), true);
+    bool_eq(test_eval("!5"), false);
+    bool_eq(test_eval("!!true"), true);
+    bool_eq(test_eval("!!false"), false);
+    bool_eq(test_eval("!!5"), true);
 }
 
 fn void eval_expression_if_else() @test {
@@ -70,11 +70,11 @@ fn void eval_expression_if_else() @test {
 }
 
 fn void eval_stmt_return() @test {
-    i32_obj_eq(test_eval("return 10;"), 10);
-    i32_obj_eq(test_eval("return 10; 9;"), 10);
-    i32_obj_eq(test_eval("return 2 * 5; 9;"), 10);
-    i32_obj_eq(test_eval("9; return 2 * 5; 9;"), 10);
-    i32_obj_eq(test_eval(`
+    i32_eq(test_eval("return 10;"), 10);
+    i32_eq(test_eval("return 10; 9;"), 10);
+    i32_eq(test_eval("return 2 * 5; 9;"), 10);
+    i32_eq(test_eval("9; return 2 * 5; 9;"), 10);
+    i32_eq(test_eval(`
         if (10 > 1) {
             if (10 > 1) {
                 return 10;
@@ -82,6 +82,13 @@ fn void eval_stmt_return() @test {
             return 1;
         }
     `), 10);
+}
+
+fn void eval_stmt_i32() @test {
+    i32_eq(test_eval("i32 a = 5; a;"), 5);
+    i32_eq(test_eval("i32 a = 5 * 5; a;"), 25);
+    i32_eq(test_eval("i32 a = 5; i32 b = a; b;"), 5);
+    i32_eq(test_eval("i32 a = 5; i32 b = a; i32 c = a + b + 5; c;"), 15);
 }
 
 fn void error_handling() @test {
@@ -99,6 +106,7 @@ fn void error_handling() @test {
             return 1;
         }
     `), "unknown operator: BOOL + BOOL");
+    err_eq(test_eval("foobar"), "identifier not found: foobar");
 }
 
 fn void err_eq(Object obj, String err_msg){
@@ -108,7 +116,7 @@ fn void err_eq(Object obj, String err_msg){
 
 macro if_else_eq(Object obj, expected) {
     $switch $typeof(expected).typeid:
-        $case int: i32_obj_eq(obj, expected);
+        $case int: i32_eq(obj, expected);
         $default: null_eq(obj);
     $endswitch
 }
@@ -121,15 +129,16 @@ fn Object test_eval(String input) {
     Lexer lexer = lexer::new(input);
     Parser parser = parser::new(lexer, allocator::temp());
     Program prog = parser.parse_program();
-    return evaluator::eval(&prog, allocator::temp())!!;
+    Environment* env = environment::new(allocator::temp());
+    return evaluator::eval(&prog, env, allocator::temp())!!;
 }
 
-fn void i32_obj_eq(Object obj, int expected) {
+fn void i32_eq(Object obj, int expected) {
     object::Int32* res = (object::Int32*) obj;
     test::eq(expected, res.value);
 }
 
-fn void bool_obj_eq(Object obj, bool expected) {
+fn void bool_eq(Object obj, bool expected) {
     object::Bool* res = (object::Bool*) obj;
     test::eq(expected, res.value);
 }

@@ -2,17 +2,19 @@ module repl;
 
 import std::io;
 import std::math::random;
-import lexer, parser, ast, evaluator;
+import lexer, parser, ast, evaluator, environment;
 
 fn void main()
 {
+    Allocator alloc = allocator::heap();
     print_logo();
+    Environment* env = environment::new(alloc);
     while (true)
     {
         io::printf("$ ");
-        String input = io::readline(allocator::heap())!!;
+        String input = io::readline(alloc)!!;
         Lexer lexer = lexer::new(input);
-        Parser parser = parser::new(lexer, allocator::heap());
+        Parser parser = parser::new(lexer, alloc);
         Program program = parser.parse_program();
 
         if (parser.errors.len() != 0) {
@@ -21,7 +23,7 @@ fn void main()
             }
         }
 
-        if (try evaluated = evaluator::eval(&program, allocator::heap())) {
+        if (try evaluated = evaluator::eval(&program, env, alloc)) {
             io::printfn("%s", colorize_str(string::tformat("%s", evaluated.inspect())));
         }
     }
