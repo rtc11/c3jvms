@@ -97,7 +97,7 @@ fn Object eval_stmt_block(BlockStatement* block, Environment* env, Allocator all
     Object res;
     foreach (stmt: block.statements) {
         res = eval(stmt, env, allocator)!!;
-        if (res != null && res.obj_type() == RETURN_VALUE || res.obj_type() == ERROR) {
+        if (res != null && res.type == Return.typeid || res.type == Error.typeid) {
             return res;
         }
     }
@@ -110,7 +110,7 @@ fn Object? eval_expr_prefix(String operator, Object right, Allocator allocator)
     {
         case "!": return eval_expr_operator_bang(right);
         case "-": return eval_expr_operator_minus(right, allocator);
-        default: return err("unknown operator: %s%s", operator, right.obj_type());
+        default: return err("unknown operator: %s%s", operator, object::type(right));
     }
 }
 
@@ -118,11 +118,11 @@ fn Object? eval_infix_expr(String operator, Object left, Object right, Allocator
 {
     switch 
     {
-        case left.obj_type() == I32 && right.obj_type() == I32: return eval_expr_infix_i32(operator, left, right, allocator);
-        case left.obj_type() != right.obj_type(): return err("type mismatch: %s %s %s", left.obj_type(), operator, right.obj_type());
+        case left.type == Int32.typeid && right.type == Int32.typeid: return eval_expr_infix_i32(operator, left, right, allocator);
+        case left.type != right.type: return err("type mismatch: %s %s %s", object::type(left), operator, object::type(right));
         case operator == "==": return left == right ? &TRUE : &FALSE;
         case operator == "!=": return left != right ? &TRUE : &FALSE;
-        default: return err("unknown operator: %s %s %s", left.obj_type(), operator, right.obj_type());
+        default: return err("unknown operator: %s %s %s", object::type(left), operator, object::type(right));
     }
 }
 
@@ -140,7 +140,7 @@ fn Object eval_expr_infix_i32(String operator, Object left, Object right, Alloca
         case ">": return lval > rval ? &TRUE : &FALSE;
         case "==": return lval == rval  ? &TRUE : &FALSE;
         case "!=": return lval != rval ? &TRUE : &FALSE;
-        default: return err("unknown operator: %s %s %s", left.obj_type(), operator, right.obj_type());
+        default: return err("unknown operator: %s %s %s", object::type(left), operator, object::type(right));
     }
 }
 
@@ -157,7 +157,7 @@ fn Object eval_expr_operator_bang(Object right)
 
 fn Object eval_expr_operator_minus(Object right, Allocator allocator)
 {
-    if (right.obj_type() != I32) return err("unknown operator: -%s", right.obj_type());
+    if (right.type != Int32.typeid) return err("unknown operator: -%s", object::type(right));
     int value = ((Int32*) right).value;
     return allocator::new(allocator, Int32, { .value = -value });
 }
@@ -209,7 +209,7 @@ fn Environment* extend_function_env(object::Fn* fun, List{Object} args, Allocato
 
 fn Object unwrap_return_value(Object obj)
 {
-    if (obj.obj_type() == RETURN_VALUE) return ((Return*) obj).value;
+    if (obj.type == Return.typeid) return ((Return*) obj).value;
     return obj;
 }
 

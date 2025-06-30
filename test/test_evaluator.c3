@@ -92,12 +92,12 @@ fn void eval_stmt_i32() @test {
 }
 
 fn void error_handling() @test {
-    err_eq(test_eval("5 + true;"), "type mismatch: I32 + BOOL");
-    err_eq(test_eval("5 + true; 5;"), "type mismatch: I32 + BOOL");
-    err_eq(test_eval("-true"), "unknown operator: -BOOL");
-    err_eq(test_eval("true + false;"), "unknown operator: BOOL + BOOL");
-    err_eq(test_eval("5; true + false; 5"), "unknown operator: BOOL + BOOL");
-    err_eq(test_eval("if (10 > 1) { true + false; }"), "unknown operator: BOOL + BOOL");
+    err_eq(test_eval("5 + true;"), "type mismatch: i32 + bool");
+    err_eq(test_eval("5 + true; 5;"), "type mismatch: i32 + bool");
+    err_eq(test_eval("-true"), "unknown operator: -bool");
+    err_eq(test_eval("true + false;"), "unknown operator: bool + bool");
+    err_eq(test_eval("5; true + false; 5"), "unknown operator: bool + bool");
+    err_eq(test_eval("if (10 > 1) { true + false; }"), "unknown operator: bool + bool");
     err_eq(test_eval(`
         if (10 > 1) {
             if (10 > 1) {
@@ -105,7 +105,7 @@ fn void error_handling() @test {
             }
             return 1;
         }
-    `), "unknown operator: BOOL + BOOL");
+    `), "unknown operator: bool + bool");
     err_eq(test_eval("foobar"), "identifier not found: foobar");
 }
 
@@ -117,13 +117,13 @@ fn void function_object() @test {
     test::eq(string::tformat("%s", fun.body), "(x + 2)");
 }
 
-// fn void function_application() @test {
-//     i32_eq(test_eval("i32 identity = fn(x) { x; }; identity(5);"), 5);
-//     i32_eq(test_eval("i32 identity = fn(x) { return x; }; identity(5);"), 5);
-//     i32_eq(test_eval("i32 double = fn(x) { x * 2; }; double(5);"), 10);
-//     i32_eq(test_eval("i32 add = fn(x, y) { x + y; }; add(5, 5);"), 10);
-//     i32_eq(test_eval("i32 add = fn(x, y) { x + y; }; add(5 + 5, add(5, 5));"), 20);
-// }
+fn void function_application() @test {
+    i32_eq(test_eval("i32 identity = fn(x) { x; }; identity(5);"), 5);
+    i32_eq(test_eval("i32 identity = fn(x) { return x; }; identity(5);"), 5);
+    i32_eq(test_eval("i32 double = fn(x) { x * 2; }; double(5);"), 10);
+    i32_eq(test_eval("i32 add = fn(x, y) { x + y; }; add(5, 5);"), 10);
+    i32_eq(test_eval("i32 add = fn(x, y) { x + y; }; add(5 + 5, add(5, 5));"), 20);
+}
 
 fn void err_eq(Object obj, String err_msg){
     Error* err_obj = (Error*) obj;
@@ -138,7 +138,7 @@ macro if_else_eq(Object obj, expected) {
 }
 
 fn void null_eq(Object obj) {
-    test::eq(obj.obj_type(), ObjectType.NULL);
+    test::eq(obj.type, Null.typeid);
 }
 
 fn Object test_eval(String input) {
