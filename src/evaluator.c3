@@ -52,6 +52,19 @@ fn Object? eval(Node node, Environment* env, Allocator allocator)
             Object ret = eval(((ReturnStatement*) node).return_value, env, allocator)!!;
             if (ret.is_err()) return ret;
             return allocator::new(allocator, Return, { .value = ret });
+        case ast::Fn:
+            ast::Fn* fun = (ast::Fn*) node;
+            return allocator::new(allocator, object::Fn, { 
+                .parameters = fun.parameters,
+                .env = env,
+                .body = fun.body, 
+            });
+        case ast::Call:
+            Object fun = eval(((Call*)node).function, env, allocator)!!;
+            if (fun.is_err()) return fun;
+            List{Object} args = eval_expressions(((Call*)node).arguments, env, allocator);
+            if (args.len() == 1 && args[0].is_err()) return args[0];
+            return apply_function(fun, args, allocator);
         default: 
             io::printfn("ERROR: Unknown node %s", node);
             return UNKNOWN_NODE?;
@@ -160,6 +173,44 @@ fn Object? eval_expr_if(If* expr, Environment* env, Allocator allocator)
     } else {
         return &NULL;
     }
+}
+
+fn List{Object} eval_expressions(List{Expression} exprs, Environment* env, Allocator allocator)
+{
+    List{Object} objs;
+    objs.tinit();
+    foreach (expr: exprs) {
+        Object obj = eval(expr, env, allocator)!!;
+        if (obj.is_err()) {
+            List{Object} err_obj;
+            err_obj.tinit();
+            err_obj.push(obj);
+            return err_obj;
+        }
+        objs.push(obj);
+    }
+    return objs;
+}
+
+fn Object apply_function(Object fun, List{Object} args, Allocator allocator)
+{
+    object::Fn* function = (object::Fn*) fun; 
+    Environment* env_ext = extend_function_env(function, args, allocator);
+    Object evaluated = eval(function.body, env_ext, allocator)!!;
+    return unwrap_return_value(evaluated);
+}
+
+fn Environment* extend_function_env(object::Fn* fun, List{Object} args, Allocator allocator)
+{
+    Environment* env = environment::new_enclosed(fun.env, allocator);
+    foreach(i, param: fun.parameters) env.set(param.value, args[i]);
+    return env;
+}
+
+fn Object unwrap_return_value(Object obj)
+{
+    if (obj.obj_type() == RETURN_VALUE) return ((Return*) obj).value;
+    return obj;
 }
 
 fn bool is_truthy(Object obj)

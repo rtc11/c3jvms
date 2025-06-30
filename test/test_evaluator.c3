@@ -109,6 +109,22 @@ fn void error_handling() @test {
     err_eq(test_eval("foobar"), "identifier not found: foobar");
 }
 
+fn void function_object() @test {
+    Object e = test_eval("fn(x) { x + 2; };");
+    object::Fn* fun = (object::Fn*) e;
+    test::eq(1, fun.parameters.len());
+    test::eq(string::tformat("%s", fun.parameters[0]), "x");
+    test::eq(string::tformat("%s", fun.body), "(x + 2)");
+}
+
+// fn void function_application() @test {
+//     i32_eq(test_eval("i32 identity = fn(x) { x; }; identity(5);"), 5);
+//     i32_eq(test_eval("i32 identity = fn(x) { return x; }; identity(5);"), 5);
+//     i32_eq(test_eval("i32 double = fn(x) { x * 2; }; double(5);"), 10);
+//     i32_eq(test_eval("i32 add = fn(x, y) { x + y; }; add(5, 5);"), 10);
+//     i32_eq(test_eval("i32 add = fn(x, y) { x + y; }; add(5 + 5, add(5, 5));"), 20);
+// }
+
 fn void err_eq(Object obj, String err_msg){
     Error* err_obj = (Error*) obj;
     test::eq(err_msg, err_obj.message);
