@@ -125,6 +125,22 @@ fn void function_application() @test {
     i32_eq(test_eval("i32 add = fn(x, y) { x + y; }; add(5 + 5, add(5, 5));"), 20);
 }
 
+fn void closures() @test {
+    i32_eq(test_eval(`
+        i32 new_adder = fn(x) {
+            fn(y) { x + y };
+        };
+        i32 add_two = new_adder(2);
+        add_two(2);
+    `), 4);
+
+    i32_eq(test_eval(`
+        i32 add = fn (a, b) { a + b };
+        i32 apply = fn (a, b, fun) { fun(a, b) };
+        apply(2, 2, add);
+    `), 4);
+}
+
 fn void err_eq(Object obj, String err_msg){
     Error* err_obj = (Error*) obj;
     test::eq(err_msg, err_obj.message);
