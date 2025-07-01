@@ -51,7 +51,6 @@ fn Token Lexer.next(&self)
         case '*': token = { ASTERISK, "*" };
         case '<': token = { LT, "<" };
         case '>': token = { GT, ">" };
-        case '"': token = { D_QUOTE, "\"" };
         case '=': 
             switch (self.peek()) {
                 case '=': 
@@ -60,8 +59,7 @@ fn Token Lexer.next(&self)
                 default: token = { ASSIGN, "=" };
             }
         case '\'': token = { QUOTE, "\"" };
-        // case '\n':
-        // case '\r': token = self.next();
+        case '"': token = { STR_LITERAL, self.read_string() };
         case '\0': token = { EOF, "" };
         case ':':
             switch (self.peek()) {
@@ -125,6 +123,24 @@ fn Token Lexer.read_number(&self)
     return { INT_LITERAL, str.str_view() };
 }
 
+fn String Lexer.read_string(&self)
+{
+    DString str;
+    str.tinit();
+    str.append(self.ch);
+
+    self.read_char();
+    while(self.ch != '"' && self.has_next()) {
+        str.append(self.ch);
+        self.read_char();
+    }
+    if (self.has_next()) { // get the ending quote
+        str.append(self.ch);
+        self.read_char();
+    }
+    return str.str_view();
+}
+
 fn Token Lexer.read_identifier(&self)
 {
     DString str;
@@ -149,6 +165,7 @@ fn Token Lexer.read_identifier(&self)
         case "::": return {NAMESPACE, identifier};  
         case "if": return {IF, identifier};  
         case "else": return {ELSE, identifier};  
+        case "str": return {STR, identifier};  
         default: return {IDENTIFIER, identifier};
     }
 }
@@ -163,38 +180,41 @@ fn usz? Token.to_format(&self, Formatter* f) @dynamic => f.printf(" %-10s : %s",
 
 enum TokenType : (String literal) 
 {
-    EOF         = "",
-    L_BRACE     = "{",
-    R_BRACE     = "}",
-    L_PAREN     = "(",
-    R_PAREN     = ")",
-    D_QUOTE     = "\"",
-    QUOTE       = "'",
-    SEMICOLON   = ";",
-    COMMA       = ",",
+    EOF            = "",
+    L_BRACE        = "{",
+    R_BRACE        = "}",
+    L_PAREN        = "(",
+    R_PAREN        = ")",
+    QUOTE          = "'",
+    SEMICOLON      = ";",
+    COMMA          = ",",
 
-    MINUS       = "-",   // prefix/infix operator 
-    PLUS        = "+",   // infix operator
-    ASTERISK    = "*",   // infix operator
-    LT          = "<",   // infix operator
-    GT          = ">",   // infix operator
-    SLASH       = "/",   // infix operator
-    BANG        = "!",   // prefix operator
+    MINUS          = "-",   // prefix/infix operator
+    PLUS           = "+",   // infix operator
+    ASTERISK       = "*",   // infix operator
+    LT             = "<",   // infix operator
+    GT             = ">",   // infix operator
+    SLASH          = "/",   // infix operator
+    BANG           = "!",   // prefix operator
+    ASSIGN         = "=",
 
-    EQ          = "==",
-    NEQ         = "!=",
+    EQ             = "==",
+    NEQ            = "!=",
 
-    ASSIGN      = "=",
-    I32         = "i32", // keyword int
-    INT_LITERAL = "",    // interger literal like "42"
-    FN          = "fn",
-    IF          = "if",
-    ELSE        = "else",
-    TRUE        = "true",
-    FALSE       = "false",
-    NAMESPACE   = "::",
-    RETURN      = "return",
-    IDENTIFIER  = "",
-    ILLEGAL     = "",
+    I32            = "i32", // keyword int
+    STR            = "str", // keyword str
+
+    STR_LITERAL    = "",    // string literal like "hello"
+    INT_LITERAL    = "",    // interger literal like 42
+
+    FN             = "fn",
+    IF             = "if",
+    ELSE           = "else",
+    TRUE           = "true",
+    FALSE          = "false",
+    NAMESPACE      = "::",
+    RETURN         = "return",
+    IDENTIFIER     = "",
+    ILLEGAL        = "",
 }
 

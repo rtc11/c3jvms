@@ -7,6 +7,7 @@ import ascii, ast, environment;
 interface Object
 {
     fn String inspect();
+    fn String name();
 }
 
 fn bool Object.is_err(&self) => self.type == Error.typeid;
@@ -16,30 +17,35 @@ struct Int32 (Object)
     int value;
 }
 fn String Int32.inspect(&self) @dynamic => string::tformat("%d", self.value);
+fn String Int32.name(&self) @dynamic => "i32";
 
 struct Bool (Object)
 {
     bool value;
 }
 fn String Bool.inspect(&self) @dynamic => string::tformat("%s", self.value);
+fn String Bool.name(&self) @dynamic => "bool";
 
 struct Null (Object)
 {
     void* value;
 }
 fn String Null.inspect(&self) @dynamic => string::tformat("null");
+fn String Null.name(&self) @dynamic => "null";
 
 struct Return (Object)
 {
     Object value;
 }
 fn String Return.inspect(&self) @dynamic => string::tformat("%s", self.value.inspect());
+fn String Return.name(&self) @dynamic => "return";
 
 struct Error (Object)
 {
     String message;
 }
 fn String Error.inspect(&self) @dynamic => string::tformat("%s: %s", ascii::colorize_red("ERROR"), self.message);
+fn String Error.name(&self) @dynamic => "error";
 
 struct Fn (Object)
 {
@@ -47,6 +53,7 @@ struct Fn (Object)
     BlockStatement* body;
     Environment* env;
 }
+fn String Fn.name(&self) @dynamic => "fn";
 fn String Fn.inspect(&self) @dynamic {
     String[] params = allocator::alloc_array(allocator::temp(), String, self.parameters.len());
     foreach(i, p: self.parameters) params[i] = string::tformat("%s", p);
@@ -56,16 +63,9 @@ fn String Fn.inspect(&self) @dynamic {
     );
 }
 
-macro type(Object o)
+struct Str (Object)
 {
-    switch (o.type)
-    {
-        case Int32: return "i32";
-        case Bool: return "bool";
-        case Null: return "null";
-        case Return : return "return";
-        case Error : return "error";
-        case Fn : return "fn";
-        default: return "object::type(o) is not exhaustive!";
-    }
+    String value;
 }
+fn String Str.name(&self) @dynamic => "str";
+fn String Str.inspect(&self) @dynamic => self.value;

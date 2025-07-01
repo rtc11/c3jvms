@@ -200,19 +200,13 @@ fn usz? Call.to_format(&self, Formatter* f) @dynamic {
     return out;
 }
 
-// struct FunctionLiteral (Expression)
-// {
-//     Token token;
-//     List{Identifier} parameters;
-//     BlockStatement* body;
-// }
-// fn void FunctionLiteral .expression_node(&self) @dynamic {}
-// fn String FunctionLiteral .token_literal(&self) @dynamic => self.token.literal;
-// fn usz? FunctionLiteral .to_format(&self, Formatter* f) @dynamic {
-//     String[] params = allocator::alloc_array(allocator::temp(), String, self.parameters.len());
-//     foreach(i, p: self.parameters) params[i] = string::tformat("%s", p);
-//     return f.printf("fn(%s) {\n%s\n}",
-//         string::join(allocator::temp(), params, ", "),
-//         self.body,
-//     );
-// }
+struct StrLiteral (Expression)
+{
+    Token token;
+    String value;
+}
+fn void StrLiteral.expression_node(&self) @dynamic {}
+fn String StrLiteral.token_literal(&self) @dynamic => self.token.literal;
+fn usz? StrLiteral.to_format(&self, Formatter* f) @dynamic {
+    return f.printf("%s", self.token.literal);
+}
