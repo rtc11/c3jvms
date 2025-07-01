@@ -123,6 +123,7 @@ fn Object? eval_infix_expr(String operator, Object left, Object right, Allocator
     {
         case left.type == Int32.typeid && right.type == Int32.typeid: return eval_expr_infix_i32(operator, left, right, allocator);
         case left.type != right.type: return err("type mismatch: %s %s %s", left.name(), operator, right.name());
+        case left.type == Str.typeid && right.type == Str.typeid: return eval_expr_infix_str(operator, left, right, allocator);
         case operator == "==": return left == right ? &TRUE : &FALSE;
         case operator == "!=": return left != right ? &TRUE : &FALSE;
         default: return err("unknown operator: %s %s %s", left.name(), operator, right.name());
@@ -145,6 +146,14 @@ fn Object eval_expr_infix_i32(String operator, Object left, Object right, Alloca
         case "!=": return lval != rval ? &TRUE : &FALSE;
         default: return err("unknown operator: %s %s %s", left.name(), operator, right.name());
     }
+}
+
+fn Object eval_expr_infix_str(String operator, Object left, Object right, Allocator a)
+{
+    if (operator != "+") return err("unknown operator: %s %s %s", left.name(), operator, right.name());
+    String lval = ((Str*) left).value;
+    String rval = ((Str*) right).value;
+    return allocator::new(a, Str, { .value = string::tformat("%s%s", lval, rval) });
 }
 
 fn Object eval_expr_operator_bang(Object right)

@@ -32,16 +32,17 @@ fn void literal_namespace()
     test::eq(lexer.next().type, TokenType.NAMESPACE);
 }
 
+typedef Tuple = String[2];
 fn void literal_string()
 {
-    String[2] cases = {
-        `"foobar"`,
-        `"foo bar"`,
+    Tuple[2] cases = {
+        {`"foobar"`, "foobar"},
+        {`"foo bar"`, "foo bar"},
     };
     for (int i = 0; i< cases.len; i++) {
-        Lexer lexer = lexer::new(cases[i]);
+        Lexer lexer = lexer::new(cases[i][0]);
         Token token = lexer.next();
         test::eq(token.type, TokenType.STR_LITERAL);
-        test::eq(token.literal, cases[i]);
+        test::eq(token.literal, cases[i][1]);
     }
 }

@@ -48,7 +48,7 @@ fn void expression_bool() @test {
 fn void expression_str() @test {
     Expression expr = expression(`"hello world";`);
     StrLiteral* lit = (StrLiteral*) expr;
-    test::eq(lit.value, `"hello world"`);
+    test::eq(lit.value, "hello world");
 }
 
 fn void expression_if() @test {

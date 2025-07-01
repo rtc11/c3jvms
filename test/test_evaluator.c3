@@ -107,6 +107,7 @@ fn void error_handling() @test {
         }
     `), "unknown operator: bool + bool");
     err_eq(test_eval("foobar"), "identifier not found: foobar");
+    err_eq(test_eval(`"Hello" - "World"`), "unknown operator: str - str");
 }
 
 fn void function_object() @test {
@@ -139,6 +140,14 @@ fn void closures() @test {
         i32 apply = fn (a, b, fun) { fun(a, b) };
         apply(2, 2, add);
     `), 4);
+}
+fn void str_concat() @test {
+    str_eq(test_eval(`"Hello" + " " + "World";`), "Hello World");
+}
+
+fn void str_eq(Object obj, String expected) {
+    object::Str* res = (object::Str*) obj;
+    test::eq(expected, res.value);
 }
 
 fn void err_eq(Object obj, String err_msg){

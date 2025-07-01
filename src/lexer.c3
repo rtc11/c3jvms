@@ -127,7 +127,7 @@ fn String Lexer.read_string(&self)
 {
     DString str;
     str.tinit();
-    str.append(self.ch);
+    // str.append(self.ch);
 
     self.read_char();
     while(self.ch != '"' && self.has_next()) {
@@ -135,7 +135,7 @@ fn String Lexer.read_string(&self)
         self.read_char();
     }
     if (self.has_next()) { // get the ending quote
-        str.append(self.ch);
+        // str.append(self.ch);
         self.read_char();
     }
     return str.str_view();
