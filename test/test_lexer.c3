@@ -1,48 +1,124 @@
-module test::lexer @test;
+module test::lexer;
 
 import lexer;
 import std::io;
 import std::collections::list;
 
-fn void literal_fn()
+fn void next_token() @test
 {
-    String code = `fn`;
-    Lexer lexer = lexer::new(code);
-    test::eq(lexer.next().type, TokenType.FN);
+    Lexer lexer = lexer::new(`
+        i32 ten = 10;
+
+        i32 add = fn(x, y) {
+            x + y;
+        };
+
+        i32 result = add(five, ten);
+        !-/*5;
+        5 < 10 > 5;
+
+        if (5 < 10) {
+            return true;
+        } else {
+            return false;
+        }
+
+        10 == 10;
+        10 != 9;
+        "foobar"
+        "foo bar"
+        [1, 2];
+    `);
+
+    token_eq(lexer.next(), { I32, "i32"});
+    token_eq(lexer.next(), { IDENTIFIER, "ten"});
+    token_eq(lexer.next(), { ASSIGN, "="});
+    token_eq(lexer.next(), { INT_LITERAL, "10"});
+    token_eq(lexer.next(), { SEMICOLON, ";"});
+
+    token_eq(lexer.next(), { I32, "i32"});
+    token_eq(lexer.next(), { IDENTIFIER, "add"});
+    token_eq(lexer.next(), { ASSIGN, "="});
+    token_eq(lexer.next(), { FN, "fn"});
+    token_eq(lexer.next(), { L_PAREN, "("});
+    token_eq(lexer.next(), { IDENTIFIER, "x"});
+    token_eq(lexer.next(), { COMMA, ","});
+    token_eq(lexer.next(), { IDENTIFIER, "y"});
+    token_eq(lexer.next(), { R_PAREN, ")"});
+    token_eq(lexer.next(), { L_BRACE, "{"});
+    token_eq(lexer.next(), { IDENTIFIER, "x"});
+    token_eq(lexer.next(), { PLUS, "+"});
+    token_eq(lexer.next(), { IDENTIFIER, "y"});
+    token_eq(lexer.next(), { SEMICOLON, ";"});
+    token_eq(lexer.next(), { R_BRACE, "}"});
+    token_eq(lexer.next(), { SEMICOLON, ";"});
+
+    token_eq(lexer.next(), { I32, "i32"});
+    token_eq(lexer.next(), { IDENTIFIER, "result"});
+    token_eq(lexer.next(), { ASSIGN, "="});
+    token_eq(lexer.next(), { IDENTIFIER, "add"});
+    token_eq(lexer.next(), { L_PAREN, "("});
+    token_eq(lexer.next(), { IDENTIFIER, "five"});
+    token_eq(lexer.next(), { COMMA, ","});
+    token_eq(lexer.next(), { IDENTIFIER, "ten"});
+    token_eq(lexer.next(), { R_PAREN, ")"});
+    token_eq(lexer.next(), { SEMICOLON, ";"});
+
+    token_eq(lexer.next(), { BANG, "!"});
+    token_eq(lexer.next(), { MINUS, "-"});
+    token_eq(lexer.next(), { SLASH, "/"});
+    token_eq(lexer.next(), { ASTERISK, "*"});
+    token_eq(lexer.next(), { INT_LITERAL, "5"});
+    token_eq(lexer.next(), { SEMICOLON, ";"});
+
+    token_eq(lexer.next(), { INT_LITERAL, "5"});
+    token_eq(lexer.next(), { LT, "<"});
+    token_eq(lexer.next(), { INT_LITERAL, "10"});
+    token_eq(lexer.next(), { GT, ">"});
+    token_eq(lexer.next(), { INT_LITERAL, "5"});
+    token_eq(lexer.next(), { SEMICOLON, ";"});
+
+    token_eq(lexer.next(), { IF, "if"});
+    token_eq(lexer.next(), { L_PAREN, "("});
+    token_eq(lexer.next(), { INT_LITERAL, "5"});
+    token_eq(lexer.next(), { LT, "<"});
+    token_eq(lexer.next(), { INT_LITERAL, "10"});
+    token_eq(lexer.next(), { R_PAREN, ")"});
+    token_eq(lexer.next(), { L_BRACE, "{"});
+    token_eq(lexer.next(), { RETURN, "return"});
+    token_eq(lexer.next(), { TRUE, "true"});
+    token_eq(lexer.next(), { SEMICOLON, ";"});
+    token_eq(lexer.next(), { R_BRACE, "}"});
+    token_eq(lexer.next(), { ELSE, "else"});
+    token_eq(lexer.next(), { L_BRACE, "{"});
+    token_eq(lexer.next(), { RETURN, "return"});
+    token_eq(lexer.next(), { FALSE, "false"});
+    token_eq(lexer.next(), { SEMICOLON, ";"});
+    token_eq(lexer.next(), { R_BRACE, "}"});
+
+    token_eq(lexer.next(), { INT_LITERAL, "10"});
+    token_eq(lexer.next(), { EQ, "=="});
+    token_eq(lexer.next(), { INT_LITERAL, "10"});
+    token_eq(lexer.next(), { SEMICOLON, ";"});
+
+    token_eq(lexer.next(), { INT_LITERAL, "10"});
+    token_eq(lexer.next(), { NEQ, "!="});
+    token_eq(lexer.next(), { INT_LITERAL, "9"});
+    token_eq(lexer.next(), { SEMICOLON, ";"});
+    token_eq(lexer.next(), { STR_LITERAL, "foobar"});
+    token_eq(lexer.next(), { STR_LITERAL, "foo bar"});
+
+    token_eq(lexer.next(), { L_BRACKET, "["});
+    token_eq(lexer.next(), { INT_LITERAL, "1"});
+    token_eq(lexer.next(), { COMMA, ","});
+    token_eq(lexer.next(), { INT_LITERAL, "2"});
+    token_eq(lexer.next(), { R_BRACKET, "]"});
+    token_eq(lexer.next(), { SEMICOLON, ";"});
 }
 
-fn void literal_int()
+fn void token_eq(Token left, Token right)
 {
-    String code = `i32`;
-    Lexer lexer = lexer::new(code);
-    test::eq(lexer.next().type, TokenType.I32);
+    test::eq(left.type, right.type);
+    test::eq(left.literal, right.literal);
 }
 
-fn void literal_semicolon()
-{
-    String code = `;`;
-    Lexer lexer = lexer::new(code);
-    test::eq(lexer.next().type, TokenType.SEMICOLON);
-}
-
-fn void literal_namespace()
-{
-    String code = `::`;
-    Lexer lexer = lexer::new(code);
-    test::eq(lexer.next().type, TokenType.NAMESPACE);
-}
-
-typedef Tuple = String[2];
-fn void literal_string()
-{
-    Tuple[2] cases = {
-        {`"foobar"`, "foobar"},
-        {`"foo bar"`, "foo bar"},
-    };
-    for (int i = 0; i< cases.len; i++) {
-        Lexer lexer = lexer::new(cases[i][0]);
-        Token token = lexer.next();
-        test::eq(token.type, TokenType.STR_LITERAL);
-        test::eq(token.literal, cases[i][1]);
-    }
-}

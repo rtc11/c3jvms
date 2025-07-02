@@ -61,6 +61,8 @@ fn Token Lexer.next(&self)
         case '\'': token = { QUOTE, "\"" };
         case '"': token = { STR_LITERAL, self.read_string() };
         case '\0': token = { EOF, "" };
+        case '[': token = { L_BRACKET, "[" };
+        case ']': token = { R_BRACKET, "]" };
         case ':':
             switch (self.peek()) {
                 case ':':  
@@ -186,6 +188,8 @@ enum TokenType : (String literal)
     R_BRACE        = "}",
     L_PAREN        = "(",
     R_PAREN        = ")",
+    L_BRACKET      = "[",
+    R_BRACKET      = "]",
     QUOTE          = "'",
     SEMICOLON      = ";",
     COMMA          = ",",
