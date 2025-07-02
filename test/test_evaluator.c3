@@ -151,6 +151,14 @@ fn void builtin_fn() @test {
     builtin_eq(test_eval(`len("abc")`), 3);
 }
 
+fn void array() @test {
+    object::Array* array = (object::Array*) test_eval("[1, 2 * 2, 3 + 3]");
+    test::eq(3, array.elements.len());
+    i32_eq(array.elements[0], 1);
+    i32_eq(array.elements[1], 4);
+    i32_eq(array.elements[2], 6);
+}
+
 macro void builtin_eq(Object obj, expected) {
     $switch $typeof(expected).typeid:
         $case int: i32_eq(obj, expected);

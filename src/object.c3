@@ -78,3 +78,14 @@ struct Builtin (Object)
 }
 fn String Builtin.name(&self) @dynamic => "builtin";
 fn String Builtin.inspect(&self) @dynamic => "builtin fn";
+
+struct Array (Object)
+{
+    List{Object} elements;
+}
+fn String Array.name(&self) @dynamic => "array";
+fn String Array.inspect(&self) @dynamic {
+    String[] elems = allocator::alloc_array(allocator::temp(), String, self.elements.len());
+    foreach(i, e: self.elements) elems[i] = string::tformat("%s", e.inspect());
+    return string::tformat("[%s]", string::join(allocator::temp(), elems, ", "));
+}

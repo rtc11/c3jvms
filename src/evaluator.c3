@@ -69,6 +69,11 @@ fn Object? eval(Node node, Environment* env, Allocator allocator)
         case StrLiteral:
             StrLiteral* str = (StrLiteral*) node;
             return allocator::new(allocator, Str, { .value = str.value });
+        case ast::Array:
+            ast::Array* array = (ast::Array*) node;
+            List{Object} elements = eval_expressions(array.elements, env, allocator);
+            if (elements.len() == 1 && elements[0].is_err()) return elements[0];
+            return allocator::new(allocator, object::Array, { .elements = elements });
         default: 
             io::printfn("ERROR: Unknown node %s", node);
             return UNKNOWN_NODE?;
