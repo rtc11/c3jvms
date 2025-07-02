@@ -64,7 +64,6 @@ fn Object? eval(Node node, Environment* env, Allocator allocator)
             Object fun = eval(((Call*)node).function, env, allocator)!!;
             if (fun.is_err()) return fun;
             List{Object} args = eval_expressions(((Call*)node).arguments, env, allocator);
-            io::printfn("call with args.len: %d", args.len());
             if (args.len() == 1 && args[0].is_err()) return args[0];
             return apply_function(fun, args, allocator);
         case StrLiteral:
@@ -217,7 +216,6 @@ fn Object apply_function(Object fun, List{Object} args, Allocator allocator)
             return unwrap_return_value(evaluated);
         case object::Builtin:
             object::Builtin* builtin = (object::Builtin*) fun;
-            io::printfn("apply fun args: %d", args.len());
             return builtin.fun(args);
         default: 
             return err("not a function: %s", fun.name());
