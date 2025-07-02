@@ -74,6 +74,13 @@ fn Object? eval(Node node, Environment* env, Allocator allocator)
             List{Object} elements = eval_expressions(array.elements, env, allocator);
             if (elements.len() == 1 && elements[0].is_err()) return elements[0];
             return allocator::new(allocator, object::Array, { .elements = elements });
+        case ast::Index:
+            ast::Index* index = (ast::Index*) node;
+            Object left = eval(index.left, env, allocator)!!;
+            if (left.is_err()) return left;
+            Object idx = eval(index.index, env, allocator)!!;
+            if (idx.is_err()) return idx;
+            return eval_expr_index(left, idx, allocator);
         default: 
             io::printfn("ERROR: Unknown node %s", node);
             return UNKNOWN_NODE?;
@@ -208,6 +215,25 @@ fn List{Object} eval_expressions(List{Expression} exprs, Environment* env, Alloc
         objs.push(obj);
     }
     return objs;
+}
+
+fn Object eval_expr_index(Object left, Object index, Allocator allocator)
+{
+    switch
+    {
+        case left.type == object::Array.typeid && index.type == Int32.typeid:
+            return eval_expr_array_index((object::Array*)left, (Int32*)index, allocator);
+        default:
+            return err("index operator %s not supported", left.name());
+    }
+}
+
+fn Object eval_expr_array_index(object::Array* array, object::Int32* index, Allocator allocator)
+{
+    int idx = index.value;
+    usz max = array.elements.len() - 1;
+    if (idx < 0 || idx > max) return &NULL;
+    return array.elements[idx];
 }
 
 fn Object apply_function(Object fun, List{Object} args, Allocator allocator)

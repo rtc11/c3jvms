@@ -159,6 +159,19 @@ fn void array() @test {
     i32_eq(array.elements[2], 6);
 }
 
+fn void array_index() @test {
+    i32_eq(test_eval("[1, 2, 3][0]"), 1);
+    i32_eq(test_eval("[1, 2, 3][1]"), 2);
+    i32_eq(test_eval("[1, 2, 3][2]"), 3);
+    i32_eq(test_eval("i32 i = 0; [1][i];"), 1);
+    i32_eq(test_eval("[1, 2, 3][1 + 1]"), 3);
+    i32_eq(test_eval("i32 arr = [1, 2, 3]; arr[2];"), 3);
+    i32_eq(test_eval("i32 arr = [1, 2, 3]; arr[0] + arr[1] + arr[2];"), 6);
+    i32_eq(test_eval("i32 arr = [1, 2, 3]; i32 i = arr[0]; arr[i]"), 2);
+    null_eq(test_eval("[1, 2, 3][3]"));
+    null_eq(test_eval("[1, 2, 3][-1]"));
+}
+
 macro void builtin_eq(Object obj, expected) {
     $switch $typeof(expected).typeid:
         $case int: i32_eq(obj, expected);
