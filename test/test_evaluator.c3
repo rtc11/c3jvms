@@ -141,8 +141,21 @@ fn void closures() @test {
         apply(2, 2, add);
     `), 4);
 }
+
 fn void str_concat() @test {
     str_eq(test_eval(`"Hello" + " " + "World";`), "Hello World");
+}
+
+fn void builtin_fn() @test {
+    builtin_eq(test_eval(`len("")`), 0);
+    builtin_eq(test_eval(`len("abc")`), 3);
+}
+
+macro void builtin_eq(Object obj, expected) {
+    $switch $typeof(expected).typeid:
+        $case int: i32_eq(obj, expected);
+        $case String: err_eq(obj, expected);
+    $endswitch
 }
 
 fn void str_eq(Object obj, String expected) {

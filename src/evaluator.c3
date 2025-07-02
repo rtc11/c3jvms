@@ -2,6 +2,7 @@ module evaluator;
 
 import std::io;
 import std::collections::list;
+import std::collections::map;
 import object, ast, environment;
 
 const object::Bool TRUE = { .value = true };
@@ -63,6 +64,7 @@ fn Object? eval(Node node, Environment* env, Allocator allocator)
             Object fun = eval(((Call*)node).function, env, allocator)!!;
             if (fun.is_err()) return fun;
             List{Object} args = eval_expressions(((Call*)node).arguments, env, allocator);
+            io::printfn("call with args.len: %d", args.len());
             if (args.len() == 1 && args[0].is_err()) return args[0];
             return apply_function(fun, args, allocator);
         case StrLiteral:
@@ -90,9 +92,9 @@ fn Object eval_program(Program* prog, Environment* env, Allocator allocator)
 
 fn Object eval_identifier(Identifier* ident, Environment* env)
 {
-    Object? obj = env.get(ident.value);
-    if(catch excuse = obj) return err("identifier not found: %s", ident.value);
-    return obj;
+    if (try obj = env.get(ident.value)) return obj;
+    if (try builtin = Builtins.lookup_field(literal, ident.value)) return @tclone(builtin.obj);
+    return err("identifier not found: %s", ident.value);
 }
 
 fn Object eval_stmt_block(BlockStatement* block, Environment* env, Allocator allocator)
@@ -206,10 +208,20 @@ fn List{Object} eval_expressions(List{Expression} exprs, Environment* env, Alloc
 
 fn Object apply_function(Object fun, List{Object} args, Allocator allocator)
 {
-    object::Fn* function = (object::Fn*) fun; 
-    Environment* env_ext = extend_function_env(function, args, allocator);
-    Object evaluated = eval(function.body, env_ext, allocator)!!;
-    return unwrap_return_value(evaluated);
+    switch (fun.type)
+    {
+        case object::Fn:
+            object::Fn* function = (object::Fn*) fun; 
+            Environment* env_ext = extend_function_env(function, args, allocator);
+            Object evaluated = eval(function.body, env_ext, allocator)!!;
+            return unwrap_return_value(evaluated);
+        case object::Builtin:
+            object::Builtin* builtin = (object::Builtin*) fun;
+            io::printfn("apply fun args: %d", args.len());
+            return builtin.fun(args);
+        default: 
+            return err("not a function: %s", fun.name());
+    }
 }
 
 fn Environment* extend_function_env(object::Fn* fun, List{Object} args, Allocator allocator)

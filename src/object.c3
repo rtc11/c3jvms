@@ -69,3 +69,12 @@ struct Str (Object)
 }
 fn String Str.name(&self) @dynamic => "str";
 fn String Str.inspect(&self) @dynamic => self.value;
+
+alias BuiltinFn = fn Object(List{Object});
+
+struct Builtin (Object)
+{
+    BuiltinFn fun;
+}
+fn String Builtin.name(&self) @dynamic => "builtin";
+fn String Builtin.inspect(&self) @dynamic => "builtin fn";

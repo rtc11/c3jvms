@@ -86,6 +86,7 @@ fn Token Lexer.next(&self)
         case RETURN:
         case IF:
         case ELSE:
+        case STR_LITERAL:
             break; 
         default: self.read_char(); // needed for single-char tokens
     }
