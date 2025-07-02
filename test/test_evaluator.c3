@@ -149,6 +149,32 @@ fn void str_concat() @test {
 fn void builtin_fn() @test {
     builtin_eq(test_eval(`len("")`), 0);
     builtin_eq(test_eval(`len("abc")`), 3);
+
+    builtin_eq(test_eval(`first([1, 2, 3])`), 1);
+    builtin_eq(test_eval(`i32 a = [4,5,6]; first(a);`), 4);
+    builtin_eq(test_eval(`last([1, 2, 3])`), 3);
+    builtin_eq(test_eval(`i32 a = [4,5,6]; last(a);`), 6);
+}
+
+fn void builtin_slice() @test {
+    builtin_slice_eq(test_eval(`slice([1, 2, 3, 4, 5], 0, 0)`), 1);
+    builtin_slice_eq(test_eval(`slice([1, 2, 3, 4, 5], 1, 1)`), 2);
+    builtin_slice_eq(test_eval(`slice([1, 2, 3, 4, 5], 2, 2)`), 3);
+    builtin_slice_eq(test_eval(`slice([1, 2, 3, 4, 5], 0, 4)`), 1, 2, 3, 4, 5);
+    builtin_slice_eq(test_eval(`slice([1, 2, 3, 4, 5], 1, 3)`), 2, 3, 4);
+    builtin_slice_eq(test_eval(`slice([1, 2, 3, 4, 5], 2, 3)`), 3, 4);
+    builtin_slice_eq(test_eval(`slice([1, 2, 3, 4, 5], 2, 4)`), 3, 4, 5);
+    builtin_slice_eq(test_eval(`slice([1, 2, 3, 4, 5], 2, 5)`), 3, 4, 5);
+    builtin_slice_eq(test_eval(`slice([1, 2, 3, 4, 5], 2, 6)`), 3, 4, 5);
+    builtin_slice_eq(test_eval(`slice([1, 2, 3, 4, 5], -2, 2)`), 1, 2, 3);
+}
+
+macro builtin_slice_eq(Object obj, ...)
+{
+    object::Array* array = (object::Array*) obj;
+    int[*] expected = { $vasplat };
+    test::eq(expected.len, array.elements.len());
+    foreach(i, elem: array.elements) i32_eq(elem, expected[i]);
 }
 
 fn void array() @test {
