@@ -163,6 +163,15 @@ fn void operator_presendence() @test {
     }
 }
 
+fn void expression_array() @test {
+    Array* array = (Array*) expression("[1, 2 * 2, 3 + 3]");
+    test::eq(3, array.elements.len());
+    intlit_eq(array.elements[0], 1);
+    test_expression_infix(array.elements[1], 2, "*", 2);
+    test_expression_infix(array.elements[2], 3, "+", 3);
+
+}
+
 fn Expression expression(String input) {
     Lexer lexer = lexer::new(input);
     Parser parser = parser::new(lexer, allocator::temp());

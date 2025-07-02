@@ -210,3 +210,16 @@ fn String StrLiteral.token_literal(&self) @dynamic => self.token.literal;
 fn usz? StrLiteral.to_format(&self, Formatter* f) @dynamic {
     return f.printf("%s", self.token.literal);
 }
+
+struct Array (Expression)
+{
+    Token token;
+    List{Expression} elements;
+}
+fn void Array.expression_node(&self) @dynamic {}
+fn String Array.token_literal(&self) @dynamic => self.token.literal;
+fn usz? Array.to_format(&self, Formatter* f) @dynamic {
+	String[] elems = allocator::alloc_array(allocator::temp(), String, self.elements.len());
+    foreach(i, e: self.elements) elems[i] = string::tformat("%s", e);
+    return f.printf("[%s]", string::join(allocator::temp(), elems, ", "));
+}

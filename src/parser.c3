@@ -65,6 +65,7 @@ fn Parser new(Lexer lexer, Allocator allocator)
     p.register_prefix(ELSE, (ParsePrefix)&Parser.parse_if_expression);
     p.register_prefix(FN, (ParsePrefix)&Parser.parse_fn_expression);
     p.register_prefix(STR_LITERAL, (ParsePrefix)&Parser.parse_str_literal);
+    p.register_prefix(L_BRACKET, (ParsePrefix)&Parser.parse_array_literal);
 
     p.register_infix(PLUS, (ParseInfix)&Parser.parse_infix_expression);
     p.register_infix(MINUS, (ParseInfix)&Parser.parse_infix_expression);
@@ -221,31 +222,9 @@ fn Expression Parser.parse_call_expression(&self, Expression function)
     Call* call = allocator::new(self.allocator, Call, {
         .token = self.cur, 
         .function = function,
-        .arguments = self.parse_call_args(),
+        .arguments = self.parse_expression_list(R_PAREN),
     });
     return (Expression) call;
-}
-
-fn List{Expression} Parser.parse_call_args(&self)
-{
-    List{Expression} args;
-    args.tinit();
-
-    if (self.peek_token_is(R_PAREN)) {
-        self.next_token();
-        return args;
-    }
-
-    self.next_token();
-    args.push(self.parse_expression(LOWEST));
-    while (self.peek_token_is(COMMA)) {
-        self.next_token();
-        self.next_token();
-        args.push(self.parse_expression(LOWEST));
-    }
-
-    if (!self.expect_peek(R_PAREN)) return {};
-    return args;
 }
 
 fn Expression Parser.parse_grouped_expression(&self)
@@ -294,6 +273,38 @@ fn Expression Parser.parse_str_literal(&self)
         .value = self.cur.literal,
     });
     return (Expression) expr;
+}
+
+fn Expression Parser.parse_array_literal(&self)
+{
+    Array* expr = allocator::new(self.allocator, Array, {
+        .token = self.cur,
+        .elements = self.parse_expression_list(R_BRACKET),
+    });
+    return (Expression) expr;
+}
+
+fn List{Expression} Parser.parse_expression_list(&self, TokenType end)
+{
+    List{Expression} list;
+    list.tinit();
+
+    if (self.peek_token_is(end)) {
+        self.next_token();
+        return list;
+    }
+
+    self.next_token();
+    list.push(self.parse_expression(LOWEST));
+
+    while(self.peek_token_is(COMMA)) {
+        self.next_token();
+        self.next_token();
+        list.push(self.parse_expression(LOWEST));
+    }
+
+    if (!self.expect_peek(end)) return {};
+    return list;
 }
 
 fn List{Identifier} Parser.parse_fn_parameters(&self)
