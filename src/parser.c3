@@ -42,6 +42,7 @@ fn Parser new(Lexer lexer, Allocator allocator)
     presendences[SLASH] = PRODUCT;
     presendences[ASTERISK] = PRODUCT;
     presendences[L_PAREN] = CALL;
+    presendences[L_BRACKET] = INDEX;
 
     Parser p = { 
         .allocator = allocator,
@@ -76,6 +77,7 @@ fn Parser new(Lexer lexer, Allocator allocator)
     p.register_infix(LT, (ParseInfix)&Parser.parse_infix_expression);
     p.register_infix(GT, (ParseInfix)&Parser.parse_infix_expression);
     p.register_infix(L_PAREN, (ParseInfix)&Parser.parse_call_expression);
+    p.register_infix(L_BRACKET, (ParseInfix)&Parser.parse_index_expression);
 
     return p;
 }
@@ -225,6 +227,15 @@ fn Expression Parser.parse_call_expression(&self, Expression function)
         .arguments = self.parse_expression_list(R_PAREN),
     });
     return (Expression) call;
+}
+
+fn Expression Parser.parse_index_expression(&self, Expression left)
+{
+    Index* index = allocator::new(self.allocator, Index, { .token = self.cur, .left = left });
+    self.next_token();
+    index.index = self.parse_expression(LOWEST);
+    if (!self.expect_peek(R_BRACKET)) return null;
+    return (Expression) index;
 }
 
 fn Expression Parser.parse_grouped_expression(&self)
@@ -407,5 +418,6 @@ enum Presendence {
     SUM,          // +
     PRODUCT,      // *
     PREFIX,       // -X or !X
-    CALL          // myFunction(X)
+    CALL,         // myFunction(X)
+    INDEX,        // array[index]
 }

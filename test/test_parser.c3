@@ -128,7 +128,7 @@ fn void expression_infix() @test {
 }
 
 fn void operator_presendence() @test {
-    StrTuple[24] cases = { 
+    StrTuple[26] cases = { 
         {"-a * b",  "((-a) * b)"},
         {"!-a",  "(!(-a))"},
         {"a + b + c",  "((a + b) + c)"},
@@ -153,6 +153,8 @@ fn void operator_presendence() @test {
         { "a + add(b * c) + d", "((a + add((b * c))) + d)" },
         { "add(a, b, 1, 2 * 3, 4 + 5, add(6, 7 * 8))", "add(a, b, 1, (2 * 3), (4 + 5), add(6, (7 * 8)))" },
         { "add(a + b + c * d / f + g)", "add((((a + b) + ((c * d) / f)) + g))" },
+        {"a * [1, 2, 3, 4][b * c] * d",  "((a * ([1, 2, 3, 4][(b * c)])) * d)"},
+        {"add(a * b[2], b[1], 2 * [1, 2][1])",  "add((a * (b[2])), (b[1]), (2 * ([1, 2][1])))"},
     };
     for(int i = 0; i < cases.len; i++) {
         Lexer lexer = lexer::new(cases[i][0]);

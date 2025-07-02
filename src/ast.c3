@@ -223,3 +223,15 @@ fn usz? Array.to_format(&self, Formatter* f) @dynamic {
     foreach(i, e: self.elements) elems[i] = string::tformat("%s", e);
     return f.printf("[%s]", string::join(allocator::temp(), elems, ", "));
 }
+
+struct Index(Expression)
+{
+    Token token;
+    Expression left;
+    Expression index;
+}
+fn void Index.expression_node(&self) @dynamic {}
+fn String Index.token_literal(&self) @dynamic => self.token.literal;
+fn usz? Index.to_format(&self, Formatter* f) @dynamic {
+	return f.printf("(%s[%s])", self.left, self.index);
+}
