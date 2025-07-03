@@ -85,10 +85,10 @@ fn void eval_stmt_return() @test {
 }
 
 fn void eval_stmt_i32() @test {
-    i32_eq(test_eval("i32 a = 5; a;"), 5);
-    i32_eq(test_eval("i32 a = 5 * 5; a;"), 25);
-    i32_eq(test_eval("i32 a = 5; i32 b = a; b;"), 5);
-    i32_eq(test_eval("i32 a = 5; i32 b = a; i32 c = a + b + 5; c;"), 15);
+    i32_eq(test_eval("let a = 5; a;"), 5);
+    i32_eq(test_eval("let a = 5 * 5; a;"), 25);
+    i32_eq(test_eval("let a = 5; let b = a; b;"), 5);
+    i32_eq(test_eval("let a = 5; let b = a; let c = a + b + 5; c;"), 15);
 }
 
 fn void error_handling() @test {
@@ -119,25 +119,25 @@ fn void function_object() @test {
 }
 
 fn void function_application() @test {
-    i32_eq(test_eval("i32 identity = fn(x) { x; }; identity(5);"), 5);
-    i32_eq(test_eval("i32 identity = fn(x) { return x; }; identity(5);"), 5);
-    i32_eq(test_eval("i32 double = fn(x) { x * 2; }; double(5);"), 10);
-    i32_eq(test_eval("i32 add = fn(x, y) { x + y; }; add(5, 5);"), 10);
-    i32_eq(test_eval("i32 add = fn(x, y) { x + y; }; add(5 + 5, add(5, 5));"), 20);
+    i32_eq(test_eval("let identity = fn(x) { x; }; identity(5);"), 5);
+    i32_eq(test_eval("let identity = fn(x) { return x; }; identity(5);"), 5);
+    i32_eq(test_eval("let double = fn(x) { x * 2; }; double(5);"), 10);
+    i32_eq(test_eval("let add = fn(x, y) { x + y; }; add(5, 5);"), 10);
+    i32_eq(test_eval("let add = fn(x, y) { x + y; }; add(5 + 5, add(5, 5));"), 20);
 }
 
 fn void closures() @test {
     i32_eq(test_eval(`
-        i32 new_adder = fn(x) {
+        let new_adder = fn(x) {
             fn(y) { x + y };
         };
-        i32 add_two = new_adder(2);
+        let add_two = new_adder(2);
         add_two(2);
     `), 4);
 
     i32_eq(test_eval(`
-        i32 add = fn (a, b) { a + b };
-        i32 apply = fn (a, b, fun) { fun(a, b) };
+        let add = fn (a, b) { a + b };
+        let apply = fn (a, b, fun) { fun(a, b) };
         apply(2, 2, add);
     `), 4);
 }
@@ -151,9 +151,9 @@ fn void builtin_fn() @test {
     builtin_eq(test_eval(`len("abc")`), 3);
 
     builtin_eq(test_eval(`first([1, 2, 3])`), 1);
-    builtin_eq(test_eval(`i32 a = [4,5,6]; first(a);`), 4);
+    builtin_eq(test_eval(`let a = [4,5,6]; first(a);`), 4);
     builtin_eq(test_eval(`last([1, 2, 3])`), 3);
-    builtin_eq(test_eval(`i32 a = [4,5,6]; last(a);`), 6);
+    builtin_eq(test_eval(`let a = [4,5,6]; last(a);`), 6);
 }
 
 fn void builtin_slice() @test {
@@ -189,11 +189,11 @@ fn void array_index() @test {
     i32_eq(test_eval("[1, 2, 3][0]"), 1);
     i32_eq(test_eval("[1, 2, 3][1]"), 2);
     i32_eq(test_eval("[1, 2, 3][2]"), 3);
-    i32_eq(test_eval("i32 i = 0; [1][i];"), 1);
+    i32_eq(test_eval("let i = 0; [1][i];"), 1);
     i32_eq(test_eval("[1, 2, 3][1 + 1]"), 3);
-    i32_eq(test_eval("i32 arr = [1, 2, 3]; arr[2];"), 3);
-    i32_eq(test_eval("i32 arr = [1, 2, 3]; arr[0] + arr[1] + arr[2];"), 6);
-    i32_eq(test_eval("i32 arr = [1, 2, 3]; i32 i = arr[0]; arr[i]"), 2);
+    i32_eq(test_eval("let arr = [1, 2, 3]; arr[2];"), 3);
+    i32_eq(test_eval("let arr = [1, 2, 3]; arr[0] + arr[1] + arr[2];"), 6);
+    i32_eq(test_eval("let arr = [1, 2, 3]; let i = arr[0]; arr[i]"), 2);
     null_eq(test_eval("[1, 2, 3][3]"));
     null_eq(test_eval("[1, 2, 3][-1]"));
 }

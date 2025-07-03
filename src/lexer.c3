@@ -79,8 +79,9 @@ fn Token Lexer.next(&self)
             }
     }
     switch (token.type) {
+        // case I32: 
         case IDENTIFIER:
-        case I32: 
+        case LET: 
         case INT_LITERAL:
         case FN:
         case TRUE:
@@ -161,7 +162,8 @@ fn Token Lexer.read_identifier(&self)
     switch (identifier)
     {
         case "fn": return {FN, identifier};  
-        case "i32": return {I32, identifier};  
+        // case "i32": return {I32, identifier};  
+        case "let": return {LET, identifier};  
         case "true": return {TRUE, identifier};  
         case "false": return {FALSE, identifier};  
         case "return": return {RETURN, identifier};  
@@ -206,7 +208,8 @@ enum TokenType : (String literal)
     EQ             = "==",
     NEQ            = "!=",
 
-    I32            = "i32", // keyword int
+    LET            = "let", // keyword let
+    // I32            = "i32", // keyword int
     STR            = "str", // keyword str
 
     STR_LITERAL    = "",    // string literal like "hello"

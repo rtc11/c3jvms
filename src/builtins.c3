@@ -67,5 +67,4 @@ fn Object builtin_slice(List{Object} args)
         return allocator::new(allocator::temp(), Array, { .elements = slice });
     }
     return array;
-
 }

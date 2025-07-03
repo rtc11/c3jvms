@@ -23,8 +23,8 @@ fn Object? eval(Node node, Environment* env, Allocator allocator)
             return eval(((ExpressionStatement*) node).expression, env, allocator);
         case IntLiteral: 
             return allocator::new(allocator, Int32, { .value = ((IntLiteral*) node).value });
-        case I32Stmt:
-            I32Stmt* stmt = (I32Stmt*) node;
+        case LetStmt:
+            LetStmt* stmt = (LetStmt*) node;
             Object i = eval(stmt.value, env, allocator)!!;
             if (i.is_err()) return i;
             env.set(stmt.name.value, i);

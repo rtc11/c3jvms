@@ -7,19 +7,19 @@ import std::collections::list;
 alias StrTuple = String[2];
 
 fn void statement_i32() @test {
-    I32Stmt* stmt = stmt_i32("i32 num = 10;");
-    i32_eq(stmt, "num", 10);
+    LetStmt* stmt = stmt_let("let num = 10;");
+    let_eq(stmt, "num", 10);
 }
 
-fn I32Stmt* stmt_i32(String input) {
+fn LetStmt* stmt_let(String input) {
     Lexer lexer = lexer::new(input);
     Parser parser = parser::new(lexer, allocator::temp());
     Program prog = parser.parse_program();
-    return (I32Stmt*) prog.statements[0];
+    return (LetStmt*) prog.statements[0];
 }
 
-macro i32_eq(I32Stmt* stmt, String expect_name, expect_expr) {
-    test::eq(stmt.token_literal(), "i32");
+macro let_eq(LetStmt* stmt, String expect_name, expect_expr) {
+    test::eq(stmt.token_literal(), "let");
     test::eq(stmt.name.value, expect_name);
     expr_eq(stmt.value, expect_expr);
 }

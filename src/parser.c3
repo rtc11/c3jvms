@@ -105,8 +105,8 @@ fn Program Parser.parse_program(&self)
 
     while (self.cur.type != EOF) {
         switch (self.cur.type) {
-            case I32: 
-                I32Stmt* stmt = self.parse_i32_stmt();
+            case LET: 
+                LetStmt* stmt = self.parse_let_stmt();
                 if (stmt != null) stmts.push(stmt);
             case RETURN:
                 ReturnStatement* stmt = self.parse_return_stmt();
@@ -120,9 +120,9 @@ fn Program Parser.parse_program(&self)
     return { stmts };
 }
 
-fn I32Stmt* Parser.parse_i32_stmt(&self)
+fn LetStmt* Parser.parse_let_stmt(&self)
 {
-    I32Stmt* stmt = allocator::new(self.allocator, I32Stmt, { .token = self.cur });
+    LetStmt* stmt = allocator::new(self.allocator, LetStmt, { .token = self.cur });
     if (!self.expect_peek(IDENTIFIER)) return null;
     stmt.name = { self.cur, self.cur.literal };
     if (!self.expect_peek(ASSIGN)) return null;
@@ -357,8 +357,8 @@ fn BlockStatement* Parser.parse_block_statement(&self)
     self.next_token();
     while(!self.cur_token_is(R_BRACE) && !self.cur_token_is(EOF)) {
         switch (self.cur.type) {
-            case I32: 
-                I32Stmt* stmt = self.parse_i32_stmt();
+            case LET: 
+                LetStmt* stmt = self.parse_let_stmt();
                 if (stmt != null) stmts.push(stmt);
             case RETURN:
                 ReturnStatement* stmt = self.parse_return_stmt();

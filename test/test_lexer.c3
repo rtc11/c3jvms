@@ -7,13 +7,13 @@ import std::collections::list;
 fn void next_token() @test
 {
     Lexer lexer = lexer::new(`
-        i32 ten = 10;
+        let ten = 10;
 
-        i32 add = fn(x, y) {
+        let add = fn(x, y) {
             x + y;
         };
 
-        i32 result = add(five, ten);
+        let result = add(five, ten);
         !-/*5;
         5 < 10 > 5;
 
@@ -30,13 +30,13 @@ fn void next_token() @test
         [1, 2];
     `);
 
-    token_eq(lexer.next(), { I32, "i32"});
+    token_eq(lexer.next(), { LET, "let"});
     token_eq(lexer.next(), { IDENTIFIER, "ten"});
     token_eq(lexer.next(), { ASSIGN, "="});
     token_eq(lexer.next(), { INT_LITERAL, "10"});
     token_eq(lexer.next(), { SEMICOLON, ";"});
 
-    token_eq(lexer.next(), { I32, "i32"});
+    token_eq(lexer.next(), { LET, "let"});
     token_eq(lexer.next(), { IDENTIFIER, "add"});
     token_eq(lexer.next(), { ASSIGN, "="});
     token_eq(lexer.next(), { FN, "fn"});
@@ -53,7 +53,7 @@ fn void next_token() @test
     token_eq(lexer.next(), { R_BRACE, "}"});
     token_eq(lexer.next(), { SEMICOLON, ";"});
 
-    token_eq(lexer.next(), { I32, "i32"});
+    token_eq(lexer.next(), { LET, "let"});
     token_eq(lexer.next(), { IDENTIFIER, "result"});
     token_eq(lexer.next(), { ASSIGN, "="});
     token_eq(lexer.next(), { IDENTIFIER, "add"});
