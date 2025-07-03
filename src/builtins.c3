@@ -6,8 +6,10 @@ import object;
 
 enum Builtins : (String literal, Builtin obj){
     LEN = { "len", { &builtin_len } },
+    PUSH = { "push", { &builtin_push } },
     FIRST = { "first", { &builtin_first } },
     LAST = { "last", { &builtin_last } },
+    REST = { "rest", { &builtin_rest } },
     SLICE = { "slice", { &builtin_slice } },
 }
 
@@ -29,6 +31,20 @@ fn Object builtin_len(List{Object} args)
     }
 }
 
+fn Object builtin_push(List{Object} args)
+{
+    if (args.len() != 2) return evaluator::err("wrong number of arguments: %d, expected: %d", args.len(), 2);
+    if (args[0].type != Array.typeid) return evaluator::err("argument to 'push' must be array, got: %s", args[0].name());
+    Array* array = (Array*) args[0];
+    usz len = array.elements.len();
+    if (len > 0) {
+        List{Object} new = *@clone(array.elements);
+        new.push(args[1]);
+        return allocator::new(allocator::temp(), Array, { .elements = new });
+    }
+    return &evaluator::NULL;
+}
+
 fn Object builtin_first(List{Object} args)
 {
     if (args.len() != 1) return evaluator::err("wrong number of arguments: %d, expected: %d", args.len(), 1);
@@ -45,6 +61,21 @@ fn Object builtin_last(List{Object} args)
     Array* array = (Array*) args[0];
     usz len = array.elements.len();
     if (len > 0) return array.elements[len - 1];
+    return &evaluator::NULL;
+}
+
+fn Object builtin_rest(List{Object} args)
+{
+    if (args.len() != 1) return evaluator::err("wrong number of arguments: %d, expected: %d", args.len(), 1);
+    if (args[0].type != Array.typeid) return evaluator::err("argument to 'rest' must be array, got: %s", args[0].name());
+    Array* array = (Array*) args[0];
+    usz len = array.elements.len();
+    if (len > 0) {
+        List{Object} rest;
+        rest.tinit();
+        foreach(e: array.elements.to_tarray()[1..]) rest.push(e);
+        return allocator::new(allocator::temp(), Array, { .elements = rest });
+    }
     return &evaluator::NULL;
 }
 
