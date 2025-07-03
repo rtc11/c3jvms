@@ -67,6 +67,7 @@ fn Parser new(Lexer lexer, Allocator allocator)
     p.register_prefix(FN, (ParsePrefix)&Parser.parse_fn_expression);
     p.register_prefix(STR_LITERAL, (ParsePrefix)&Parser.parse_str_literal);
     p.register_prefix(L_BRACKET, (ParsePrefix)&Parser.parse_array_literal);
+    p.register_prefix(L_BRACE, (ParsePrefix)&Parser.parse_hash_literal);
 
     p.register_infix(PLUS, (ParseInfix)&Parser.parse_infix_expression);
     p.register_infix(MINUS, (ParseInfix)&Parser.parse_infix_expression);
@@ -291,6 +292,28 @@ fn Expression Parser.parse_array_literal(&self)
     Array* expr = allocator::new(self.allocator, Array, {
         .token = self.cur,
         .elements = self.parse_expression_list(R_BRACKET),
+    });
+    return (Expression) expr;
+}
+
+fn Expression Parser.parse_hash_literal(&self)
+{
+    Token token = self.cur;
+    HashMap{Expression, Expression} pairs;
+    pairs.tinit();
+    while(!self.peek_token_is(R_BRACE)) {
+        self.next_token();
+        Expression key = self.parse_expression(LOWEST);
+        if (!self.expect_peek(COLON)) return null;
+        self.next_token();
+        Expression value = self.parse_expression(LOWEST);
+        pairs[key] = value;
+        if (!self.peek_token_is(R_BRACE) && !self.expect_peek(COMMA)) return null;
+    }
+    if (!self.expect_peek(R_BRACE)) return null;
+    Hash* expr = allocator::new(self.allocator, Hash, {
+        .token = token,
+        .pairs = pairs,
     });
     return (Expression) expr;
 }

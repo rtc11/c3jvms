@@ -28,6 +28,7 @@ fn void next_token() @test
         "foobar"
         "foo bar"
         [1, 2];
+        {"foo": "bar"}
     `);
 
     token_eq(lexer.next(), { LET, "let"});
@@ -114,6 +115,15 @@ fn void next_token() @test
     token_eq(lexer.next(), { INT_LITERAL, "2"});
     token_eq(lexer.next(), { R_BRACKET, "]"});
     token_eq(lexer.next(), { SEMICOLON, ";"});
+
+    token_eq(lexer.next(), { L_BRACE, "{"});
+    token_eq(lexer.next(), { STR_LITERAL, "foo"});
+    token_eq(lexer.next(), { COLON, ":"});
+    token_eq(lexer.next(), { STR_LITERAL, "bar"});
+    token_eq(lexer.next(), { R_BRACE, "}"});
+
+    token_eq(lexer.next(), { EOF, ""});
+    test::eq(false, lexer.has_next());
 }
 
 fn void token_eq(Token left, Token right)

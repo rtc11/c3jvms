@@ -68,7 +68,7 @@ fn Token Lexer.next(&self)
                 case ':':  
                     token = { NAMESPACE, "::"};
                     self.read_char();
-                default: token = { ILLEGAL, string::tformat("%c", self.ch) };
+                default: token = { COLON, ":" };
             }
 
         default:
@@ -194,6 +194,7 @@ enum TokenType : (String literal)
     R_BRACKET      = "]",
     QUOTE          = "'",
     SEMICOLON      = ";",
+    COLON          = ":",
     COMMA          = ",",
 
     MINUS          = "-",   // prefix/infix operator

@@ -3,6 +3,7 @@ module ast;
 import lexer;
 import std::io;
 import std::collections::list;
+import std::collections::map;
 
 interface Node
 {
@@ -235,3 +236,21 @@ fn String Index.token_literal(&self) @dynamic => self.token.literal;
 fn usz? Index.to_format(&self, Formatter* f) @dynamic {
 	return f.printf("(%s[%s])", self.left, self.index);
 }
+
+struct Hash (Expression)
+{
+    Token token;
+    HashMap{Expression, Expression} pairs;
+}
+fn void Hash.expression_node(&self) @dynamic {}
+fn String Hash.token_literal(&self) @dynamic => self.token.literal;
+fn usz? Hash.to_format(&self, Formatter* f) @dynamic {
+	String[] pairs = allocator::alloc_array(allocator::temp(), String, self.pairs.len());
+    int i;
+    self.pairs.@each(; Expression k, Expression v) {
+        pairs[i++] = string::tformat("%s:%s", k, v);
+    };
+	return f.printf("{%s}", string::join(allocator::temp(), pairs, ", "));
+}
+fn uint Expression.hash(&self) => string::tformat("%s", self).hash(); // TODO: how can i dynamically let the user select a hash?
+
