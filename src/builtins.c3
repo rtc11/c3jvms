@@ -37,12 +37,9 @@ fn Object builtin_push(List{Object} args)
     if (args[0].type != Array.typeid) return evaluator::err("argument to 'push' must be array, got: %s", args[0].name());
     Array* array = (Array*) args[0];
     usz len = array.elements.len();
-    if (len > 0) {
-        List{Object} new = *@clone(array.elements);
-        new.push(args[1]);
-        return allocator::new(allocator::temp(), Array, { .elements = new });
-    }
-    return &evaluator::NULL;
+    List{Object} new = *@tclone(array.elements);
+    new.push(args[1]);
+    return allocator::new(allocator::temp(), Array, { .elements = new });
 }
 
 fn Object builtin_first(List{Object} args)

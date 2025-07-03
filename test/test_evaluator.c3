@@ -149,7 +149,6 @@ fn void str_concat() @test {
 fn void builtin_fn() @test {
     builtin_eq(test_eval(`len("")`), 0);
     builtin_eq(test_eval(`len("abc")`), 3);
-
     builtin_eq(test_eval(`first([1, 2, 3])`), 1);
     builtin_eq(test_eval(`let a = [4,5,6]; first(a);`), 4);
     builtin_eq(test_eval(`last([1, 2, 3])`), 3);
@@ -157,32 +156,72 @@ fn void builtin_fn() @test {
 }
 
 fn void builtin_slice() @test {
-    builtin_slice_eq(test_eval(`slice([1, 2, 3, 4, 5], 0, 0)`), 1);
-    builtin_slice_eq(test_eval(`slice([1, 2, 3, 4, 5], 1, 1)`), 2);
-    builtin_slice_eq(test_eval(`slice([1, 2, 3, 4, 5], 2, 2)`), 3);
-    builtin_slice_eq(test_eval(`slice([1, 2, 3, 4, 5], 0, 4)`), 1, 2, 3, 4, 5);
-    builtin_slice_eq(test_eval(`slice([1, 2, 3, 4, 5], 1, 3)`), 2, 3, 4);
-    builtin_slice_eq(test_eval(`slice([1, 2, 3, 4, 5], 2, 3)`), 3, 4);
-    builtin_slice_eq(test_eval(`slice([1, 2, 3, 4, 5], 2, 4)`), 3, 4, 5);
-    builtin_slice_eq(test_eval(`slice([1, 2, 3, 4, 5], 2, 5)`), 3, 4, 5);
-    builtin_slice_eq(test_eval(`slice([1, 2, 3, 4, 5], 2, 6)`), 3, 4, 5);
-    builtin_slice_eq(test_eval(`slice([1, 2, 3, 4, 5], -2, 2)`), 1, 2, 3);
+    builtin_array_eq(test_eval(`slice([1, 2, 3, 4, 5], 0, 0)`), 1);
+    builtin_array_eq(test_eval(`slice([1, 2, 3, 4, 5], 1, 1)`), 2);
+    builtin_array_eq(test_eval(`slice([1, 2, 3, 4, 5], 2, 2)`), 3);
+    builtin_array_eq(test_eval(`slice([1, 2, 3, 4, 5], 0, 4)`), 1, 2, 3, 4, 5);
+    builtin_array_eq(test_eval(`slice([1, 2, 3, 4, 5], 1, 3)`), 2, 3, 4);
+    builtin_array_eq(test_eval(`slice([1, 2, 3, 4, 5], 2, 3)`), 3, 4);
+    builtin_array_eq(test_eval(`slice([1, 2, 3, 4, 5], 2, 4)`), 3, 4, 5);
+    builtin_array_eq(test_eval(`slice([1, 2, 3, 4, 5], 2, 5)`), 3, 4, 5);
+    builtin_array_eq(test_eval(`slice([1, 2, 3, 4, 5], 2, 6)`), 3, 4, 5);
+    builtin_array_eq(test_eval(`slice([1, 2, 3, 4, 5], -2, 2)`), 1, 2, 3);
 }
 
-macro builtin_slice_eq(Object obj, ...)
-{
-    object::Array* array = (object::Array*) obj;
-    int[*] expected = { $vasplat };
-    test::eq(expected.len, array.elements.len());
-    foreach(i, elem: array.elements) i32_eq(elem, expected[i]);
+fn void builtin_rest() @test {
+    builtin_array_eq(test_eval(`rest([1, 2, 3])`), 2, 3 );
+    builtin_array_eq(test_eval(`rest(rest([1, 2, 3]))`), 3 );
+    builtin_array_eq(test_eval(`rest(rest(rest([1, 2, 3])))`));
+    null_eq(test_eval(`rest(rest(rest(rest([1, 2, 3]))))`));
+}
+
+fn void builtin_push() @test {
+    builtin_array_eq(test_eval(`let a = [1]; push(a, 2);`), 1, 2);
+    builtin_array_eq(test_eval(`let a = []; push(a, 1);`), 1);
+}
+
+// TODO: move to stdlib
+fn void map() @test {
+    builtin_array_eq(test_eval(`
+        let map = fn(arr, f) {
+            let iter = fn(arr, acc) {
+                if (len(arr) == 0) {
+                    acc
+                } else {
+                    iter(rest(arr), push(acc, f(first(arr))));
+                }
+            };
+            iter(arr, []);
+        };
+        let a = [1, 2, 3, 4];
+        let double = fn(x) { x * 2 };
+        map(a, double);
+    `), 2, 4, 6, 8);
+}
+
+// TODO: move to stdlib
+fn void reduce() @test {
+    i32_eq(test_eval(`
+        let reduce = fn(arr, init, f) {
+            let iter = fn(arr, acc) {
+                if (len(arr) == 0) {
+                    acc
+                } else {
+                    iter(rest(arr), f(acc, first(arr)));
+                }
+            };
+            iter(arr, init);
+        };
+        let sum = fn(arr) {
+            reduce(arr, 0, fn(init, el) { init + el });
+        };
+        sum([1, 2, 3, 4, 5]);
+    `), 15);
 }
 
 fn void array() @test {
-    object::Array* array = (object::Array*) test_eval("[1, 2 * 2, 3 + 3]");
-    test::eq(3, array.elements.len());
-    i32_eq(array.elements[0], 1);
-    i32_eq(array.elements[1], 4);
-    i32_eq(array.elements[2], 6);
+    builtin_array_eq(test_eval("[]"));
+    builtin_array_eq(test_eval("[1, 2 * 2, 3 + 3]"), 1, 4, 6);
 }
 
 fn void array_index() @test {
@@ -196,6 +235,17 @@ fn void array_index() @test {
     i32_eq(test_eval("let arr = [1, 2, 3]; let i = arr[0]; arr[i]"), 2);
     null_eq(test_eval("[1, 2, 3][3]"));
     null_eq(test_eval("[1, 2, 3][-1]"));
+}
+
+macro builtin_array_eq(Object obj, ...)
+{
+    object::Array* array = (object::Array*) obj;
+    int[*] expected = { $vasplat, 0 };
+    if (expected.len == 1) return;
+    test::eq(expected.len - 1, array.elements.len());
+    for (int i = 0; i< array.elements.len() -1; i++) {
+        i32_eq(array.elements[i], expected[i]);
+    }
 }
 
 macro void builtin_eq(Object obj, expected) {
