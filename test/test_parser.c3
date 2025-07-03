@@ -176,10 +176,10 @@ fn void expression_array() @test {
 }
 
 fn void hash_str_keys() @test {
-    Hash* hash = (Hash*) expression(`{"one": 1, "two": 2, "three": 3}`);
+    ast::HashMap* hash = (ast::HashMap*) expression(`{"one": 1, "two": 2, "three": 3}`);
     test::eq(3, hash.pairs.len());
 
-    HashMap{String, int} expected;
+    map::HashMap{String, int} expected;
     expected.tinit();
     expected["one"] = 1;
     expected["two"] = 2;
@@ -190,27 +190,23 @@ fn void hash_str_keys() @test {
         IntLiteral* value = (IntLiteral*)v;
         intlit_eq(value, expected[key.value]!!);
     };
-
-    // test::eq(1, hash.pairs["one"]);
-    // test::eq(2, hash.pairs["two"]);
-    // test::eq(3, hash.pairs["three"]);
 }
 
 fn void hash_empty() @test {
-    Hash* hash = (Hash*) expression(`{}`);
+    ast::HashMap* hash = (ast::HashMap*) expression(`{}`);
     test::eq(0, hash.pairs.len());
 }
 
 alias FunExpr = fn void (Expression);
-fn void hash_expression_keys_one(Expression e) { test_expression_infix(e, 0, "+", 1); }
-fn void hash_expression_keys_two(Expression e) { test_expression_infix(e, 10, "-", 8); }
-fn void hash_expression_keys_three(Expression e) { test_expression_infix(e, 15, "/", 5); }
+fn void hash_expression_keys_one(Expression e) => test_expression_infix(e, 0, "+", 1); 
+fn void hash_expression_keys_two(Expression e) => test_expression_infix(e, 10, "-", 8);
+fn void hash_expression_keys_three(Expression e) => test_expression_infix(e, 15, "/", 5);
 
 fn void hash_expression_keys() @test {
-    Hash* hash = (Hash*) expression(`{"one": 0 + 1, "two": 10 - 8, "three": 15 / 5 }`);
+    ast::HashMap* hash = (ast::HashMap*) expression(`{"one": 0 + 1, "two": 10 - 8, "three": 15 / 5 }`);
     test::eq(3, hash.pairs.len());
 
-    HashMap{String, FunExpr} expected;
+    map::HashMap{String, FunExpr} expected;
     expected.tinit();
     expected["one"] = &hash_expression_keys_one;
     expected["two"] = &hash_expression_keys_two;
@@ -220,7 +216,6 @@ fn void hash_expression_keys() @test {
         StrLiteral* key = (StrLiteral*)k;
         FunExpr test_expr = expected[key.value]!!;
         test_expr(v);
-        // intlit_eq(value, expected[key.value]!!);
     };
 }
 

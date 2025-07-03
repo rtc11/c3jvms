@@ -237,14 +237,14 @@ fn usz? Index.to_format(&self, Formatter* f) @dynamic {
 	return f.printf("(%s[%s])", self.left, self.index);
 }
 
-struct Hash (Expression)
+struct HashMap (Expression)
 {
     Token token;
-    HashMap{Expression, Expression} pairs;
+    map::HashMap{Expression, Expression} pairs;
 }
-fn void Hash.expression_node(&self) @dynamic {}
-fn String Hash.token_literal(&self) @dynamic => self.token.literal;
-fn usz? Hash.to_format(&self, Formatter* f) @dynamic {
+fn void HashMap.expression_node(&self) @dynamic {}
+fn String HashMap.token_literal(&self) @dynamic => self.token.literal;
+fn usz? HashMap.to_format(&self, Formatter* f) @dynamic {
 	String[] pairs = allocator::alloc_array(allocator::temp(), String, self.pairs.len());
     int i;
     self.pairs.@each(; Expression k, Expression v) {

@@ -299,7 +299,7 @@ fn Expression Parser.parse_array_literal(&self)
 fn Expression Parser.parse_hash_literal(&self)
 {
     Token token = self.cur;
-    HashMap{Expression, Expression} pairs;
+    map::HashMap{Expression, Expression} pairs;
     pairs.tinit();
     while(!self.peek_token_is(R_BRACE)) {
         self.next_token();
@@ -311,7 +311,7 @@ fn Expression Parser.parse_hash_literal(&self)
         if (!self.peek_token_is(R_BRACE) && !self.expect_peek(COMMA)) return null;
     }
     if (!self.expect_peek(R_BRACE)) return null;
-    Hash* expr = allocator::new(self.allocator, Hash, {
+    ast::HashMap* expr = allocator::new(self.allocator, ast::HashMap, {
         .token = token,
         .pairs = pairs,
     });
