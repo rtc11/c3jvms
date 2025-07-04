@@ -252,5 +252,5 @@ fn usz? HashMap.to_format(&self, Formatter* f) @dynamic {
     };
 	return f.printf("{%s}", string::join(allocator::temp(), pairs, ", "));
 }
-fn uint Expression.hash(&self) => string::tformat("%s", self).hash(); // TODO: how can i dynamically let the user select a hash?
+fn uint Expression.hash(&self) => string::tformat("%s", self).hash(); // used for c3 hashmap
 

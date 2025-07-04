@@ -2,6 +2,7 @@ module test::evaluator;
 
 import std::io;
 import std::collections::list;
+import std::collections::map;
 import evaluator, object, ast, parser, lexer, environment;
 
 fn void eval_expression_i32() @test {
@@ -237,6 +238,36 @@ fn void array_index() @test {
     null_eq(test_eval("[1, 2, 3][-1]"));
 }
 
+fn void hash() @test {
+    Object obj = test_eval(`
+        let two = "two";
+        {
+            "one": 10 - 9,
+            two: 1 + 1,
+            "thr" + "ee": 6 / 2,
+            4: 4,
+            true: 5,
+            false: 6
+        }
+    `);
+    if (obj.is_err()) io::printfn("%s", ((Error*) obj).message);
+    test::eq(obj.name(), "hash");
+    object::HashMap* hm = (object::HashMap*) obj;
+    map::HashMap{Hash, int} expected;
+    expected.tinit();
+    expected[(Str){"one"}.hash()] = 1;
+    expected[(Str){"two"}.hash()] = 2;
+    expected[(Str){"three"}.hash()] = 3;
+    expected[(Int32){4}.hash()] = 4;
+    expected[(object::Bool){true}.hash()] = 5;
+    expected[(object::Bool){false}.hash()] = 6;
+    test::eq(expected.len(), hm.pairs.len());
+    expected.@each(; Hash expected_key, int expected_value) {
+        HashPair pair = hm.pairs[expected_key]!!;
+        i32_eq(pair.value, expected_value);
+    };
+}
+
 macro builtin_array_eq(Object obj, ...)
 {
     object::Array* array = (object::Array*) obj;
@@ -281,7 +312,7 @@ fn Object test_eval(String input) {
     Parser parser = parser::new(lexer, allocator::temp());
     Program prog = parser.parse_program();
     Environment* env = environment::new(allocator::temp());
-    return evaluator::eval(&prog, env, allocator::temp())!!;
+    return evaluator::eval(&prog, env, allocator::temp());
 }
 
 fn void i32_eq(Object obj, int expected) {

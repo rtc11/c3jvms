@@ -13,7 +13,7 @@ faultdef UNKNOWN_NODE;
 
 macro Error* err(String format, ...) => allocator::new(allocator::temp(), Error, { .message = string::tformat(format, $vasplat) });
 
-fn Object? eval(Node node, Environment* env, Allocator allocator)
+fn Object eval(Node node, Environment* env, Allocator allocator)
 {
     switch (node.type)
     {
@@ -25,7 +25,7 @@ fn Object? eval(Node node, Environment* env, Allocator allocator)
             return allocator::new(allocator, Int32, { .value = ((IntLiteral*) node).value });
         case LetStmt:
             LetStmt* stmt = (LetStmt*) node;
-            Object i = eval(stmt.value, env, allocator)!!;
+            Object i = eval(stmt.value, env, allocator);
             if (i.is_err()) return i;
             env.set(stmt.name.value, i);
             return i;
@@ -35,14 +35,14 @@ fn Object? eval(Node node, Environment* env, Allocator allocator)
             return ((ast::Bool*) node).value ? &TRUE : &FALSE;
         case PrefixExpression:
             PrefixExpression* prefix_expr = (PrefixExpression*) node;
-            Object right = eval(prefix_expr.right, env, allocator)!!;
+            Object right = eval(prefix_expr.right, env, allocator);
             if (right.is_err()) return right;
             return eval_expr_prefix(prefix_expr.operator, right, allocator);
         case InfixExpression:
             InfixExpression* infix_expr = (InfixExpression*) node;
-            Object left = eval(infix_expr.left, env, allocator)!!;
+            Object left = eval(infix_expr.left, env, allocator);
             if (left.is_err()) return left;
-            Object right = eval(infix_expr.right, env, allocator)!!;
+            Object right = eval(infix_expr.right, env, allocator);
             if (right.is_err()) return right;
             return eval_infix_expr(infix_expr.operator, left, right, allocator);
         case BlockStatement: 
@@ -50,7 +50,7 @@ fn Object? eval(Node node, Environment* env, Allocator allocator)
         case If: 
             return eval_expr_if((If*) node, env, allocator);
         case ReturnStatement:
-            Object ret = eval(((ReturnStatement*) node).return_value, env, allocator)!!;
+            Object ret = eval(((ReturnStatement*) node).return_value, env, allocator);
             if (ret.is_err()) return ret;
             return allocator::new(allocator, Return, { .value = ret });
         case ast::Fn:
@@ -61,7 +61,7 @@ fn Object? eval(Node node, Environment* env, Allocator allocator)
                 .body = fun.body, 
             });
         case ast::Call:
-            Object fun = eval(((Call*)node).function, env, allocator)!!;
+            Object fun = eval(((Call*)node).function, env, allocator);
             if (fun.is_err()) return fun;
             List{Object} args = eval_expressions(((Call*)node).arguments, env, allocator);
             if (args.len() == 1 && args[0].is_err()) return args[0];
@@ -76,14 +76,15 @@ fn Object? eval(Node node, Environment* env, Allocator allocator)
             return allocator::new(allocator, object::Array, { .elements = elements });
         case ast::Index:
             ast::Index* index = (ast::Index*) node;
-            Object left = eval(index.left, env, allocator)!!;
+            Object left = eval(index.left, env, allocator);
             if (left.is_err()) return left;
-            Object idx = eval(index.index, env, allocator)!!;
+            Object idx = eval(index.index, env, allocator);
             if (idx.is_err()) return idx;
             return eval_expr_index(left, idx, allocator);
+        case ast::HashMap:
+            return eval_hashmap((ast::HashMap*) node, env, allocator);
         default: 
-            io::printfn("ERROR: Unknown node %s", node);
-            return UNKNOWN_NODE?;
+            return err("ERROR: Unknown node %s", node);
     }
 }
 
@@ -91,7 +92,7 @@ fn Object eval_program(Program* prog, Environment* env, Allocator allocator)
 {
     Object res;
     foreach (stmt: prog.statements) {
-        res = eval(stmt, env, allocator)!!;
+        res = eval(stmt, env, allocator);
         switch (res.type)
         {
             case Return: return ((Return*) res).value;
@@ -112,7 +113,7 @@ fn Object eval_stmt_block(BlockStatement* block, Environment* env, Allocator all
 {
     Object res;
     foreach (stmt: block.statements) {
-        res = eval(stmt, env, allocator)!!;
+        res = eval(stmt, env, allocator);
         if (res != null && res.type == Return.typeid || res.type == Error.typeid) {
             return res;
         }
@@ -120,7 +121,7 @@ fn Object eval_stmt_block(BlockStatement* block, Environment* env, Allocator all
     return res;
 }
 
-fn Object? eval_expr_prefix(String operator, Object right, Allocator allocator)
+fn Object eval_expr_prefix(String operator, Object right, Allocator allocator)
 {
     switch (operator)
     {
@@ -130,7 +131,7 @@ fn Object? eval_expr_prefix(String operator, Object right, Allocator allocator)
     }
 }
 
-fn Object? eval_infix_expr(String operator, Object left, Object right, Allocator allocator)
+fn Object eval_infix_expr(String operator, Object left, Object right, Allocator allocator)
 {
     switch 
     {
@@ -187,9 +188,9 @@ fn Object eval_expr_operator_minus(Object right, Allocator allocator)
     return allocator::new(allocator, Int32, { .value = -value });
 }
 
-fn Object? eval_expr_if(If* expr, Environment* env, Allocator allocator)
+fn Object eval_expr_if(If* expr, Environment* env, Allocator allocator)
 {
-    Object condition = eval(expr.condition, env, allocator)!!;
+    Object condition = eval(expr.condition, env, allocator);
     if (condition.is_err()) return condition;
     if (is_truthy(condition)) {
         return eval(expr.consequence, env, allocator);
@@ -205,7 +206,7 @@ fn List{Object} eval_expressions(List{Expression} exprs, Environment* env, Alloc
     List{Object} objs;
     objs.tinit();
     foreach (expr: exprs) {
-        Object obj = eval(expr, env, allocator)!!;
+        Object obj = eval(expr, env, allocator);
         if (obj.is_err()) {
             List{Object} err_obj;
             err_obj.tinit();
@@ -228,6 +229,60 @@ fn Object eval_expr_index(Object left, Object index, Allocator allocator)
     }
 }
 
+// fn Object eval_hashmap(ast::HashMap* node, Environment* env, Allocator alloc)
+// {
+//     map::HashMap{Hash, HashPair} pairs;
+//     pairs.tinit();
+//     node.pairs.@each(; Expression k, Expression v) {
+//         Object key = eval(k, env, alloc);
+//         if (key.is_err()) return key;
+//         if (key.type != object::Bool.typeid) {
+//         // if (key.type != Hashable.typeid) {
+//             return err("unusable as hash key: %s", key.name());
+//         }
+//         Hashable* hash_key = (Hashable*) key;
+//         Object value = eval(v, env, alloc);
+//         if (value.is_err()) return value;
+//         Hash hashed = hash_key.hash();
+//         pairs[hashed] = *allocator::new(alloc, HashPair, { key, value });
+//     };
+//     return allocator::new(alloc, object::HashMap, { pairs });
+// }
+
+fn Object eval_hashmap(ast::HashMap* node, Environment* env, Allocator alloc)
+{
+    map::HashMap{Hash, HashPair} pairs;
+    pairs.tinit();
+    node.pairs.@each(; Expression k, Expression v) {
+        Object key = eval(k, env, alloc);
+        if (key.is_err()) return key;
+        switch (key.type)
+        {
+            case object::Bool.typeid:
+                object::Bool* hash_key = (object::Bool*) key;
+                Object value = eval(v, env, alloc);
+                if (value.is_err()) return value;
+                Hash hashed = hash_key.hash();
+                pairs[hashed] = *allocator::new(alloc, HashPair, { key, value });
+            case object::Int32.typeid:
+                object::Int32* hash_key = (object::Int32*) key;
+                Object value = eval(v, env, alloc);
+                if (value.is_err()) return value;
+                Hash hashed = hash_key.hash();
+                pairs[hashed] = *allocator::new(alloc, HashPair, { key, value });
+            case object::Str.typeid:
+                object::Str* hash_key = (object::Str*) key;
+                Object value = eval(v, env, alloc);
+                if (value.is_err()) return value;
+                Hash hashed = hash_key.hash();
+                pairs[hashed] = *allocator::new(alloc, HashPair, { key, value });
+            default: 
+                return err("unusable as hash key: %s", key.name()); 
+        }
+    };
+    return allocator::new(alloc, object::HashMap, { pairs });
+}
+
 fn Object eval_expr_array_index(object::Array* array, object::Int32* index, Allocator allocator)
 {
     int idx = index.value;
@@ -243,7 +298,7 @@ fn Object apply_function(Object fun, List{Object} args, Allocator allocator)
         case object::Fn:
             object::Fn* function = (object::Fn*) fun; 
             Environment* env_ext = extend_function_env(function, args, allocator);
-            Object evaluated = eval(function.body, env_ext, allocator)!!;
+            Object evaluated = eval(function.body, env_ext, allocator);
             return unwrap_return_value(evaluated);
         case object::Builtin:
             object::Builtin* builtin = (object::Builtin*) fun;
