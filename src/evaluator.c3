@@ -224,63 +224,11 @@ fn Object eval_expr_index(Object left, Object index, Allocator allocator)
     {
         case left.type == object::Array.typeid && index.type == Int32.typeid:
             return eval_expr_array_index((object::Array*)left, (Int32*)index, allocator);
+        case left.type == object::HashMap.typeid:
+            return eval_expr_hash_index((object::HashMap*)left, index, allocator);
         default:
             return err("index operator %s not supported", left.name());
     }
-}
-
-// fn Object eval_hashmap(ast::HashMap* node, Environment* env, Allocator alloc)
-// {
-//     map::HashMap{Hash, HashPair} pairs;
-//     pairs.tinit();
-//     node.pairs.@each(; Expression k, Expression v) {
-//         Object key = eval(k, env, alloc);
-//         if (key.is_err()) return key;
-//         if (key.type != object::Bool.typeid) {
-//         // if (key.type != Hashable.typeid) {
-//             return err("unusable as hash key: %s", key.name());
-//         }
-//         Hashable* hash_key = (Hashable*) key;
-//         Object value = eval(v, env, alloc);
-//         if (value.is_err()) return value;
-//         Hash hashed = hash_key.hash();
-//         pairs[hashed] = *allocator::new(alloc, HashPair, { key, value });
-//     };
-//     return allocator::new(alloc, object::HashMap, { pairs });
-// }
-
-fn Object eval_hashmap(ast::HashMap* node, Environment* env, Allocator alloc)
-{
-    map::HashMap{Hash, HashPair} pairs;
-    pairs.tinit();
-    node.pairs.@each(; Expression k, Expression v) {
-        Object key = eval(k, env, alloc);
-        if (key.is_err()) return key;
-        switch (key.type)
-        {
-            case object::Bool.typeid:
-                object::Bool* hash_key = (object::Bool*) key;
-                Object value = eval(v, env, alloc);
-                if (value.is_err()) return value;
-                Hash hashed = hash_key.hash();
-                pairs[hashed] = *allocator::new(alloc, HashPair, { key, value });
-            case object::Int32.typeid:
-                object::Int32* hash_key = (object::Int32*) key;
-                Object value = eval(v, env, alloc);
-                if (value.is_err()) return value;
-                Hash hashed = hash_key.hash();
-                pairs[hashed] = *allocator::new(alloc, HashPair, { key, value });
-            case object::Str.typeid:
-                object::Str* hash_key = (object::Str*) key;
-                Object value = eval(v, env, alloc);
-                if (value.is_err()) return value;
-                Hash hashed = hash_key.hash();
-                pairs[hashed] = *allocator::new(alloc, HashPair, { key, value });
-            default: 
-                return err("unusable as hash key: %s", key.name()); 
-        }
-    };
-    return allocator::new(alloc, object::HashMap, { pairs });
 }
 
 fn Object eval_expr_array_index(object::Array* array, object::Int32* index, Allocator allocator)
@@ -289,6 +237,48 @@ fn Object eval_expr_array_index(object::Array* array, object::Int32* index, Allo
     usz max = array.elements.len() - 1;
     if (idx < 0 || idx > max) return &NULL;
     return array.elements[idx];
+}
+
+fn Object eval_expr_hash_index(object::HashMap* hashmap, Object index, Allocator alloc)
+{
+    if (try hash = hashable(index)) {
+        Hash hash_key = hash.hash();
+        if (try pair = hashmap.pairs[hash_key]) return pair.value;
+        return &NULL;
+    }
+    return err("unusable as hash key: %s", index.name()); 
+}
+
+fn Object eval_hashmap(ast::HashMap* node, Environment* env, Allocator alloc)
+{
+    map::HashMap{Hash, HashPair} pairs;
+    pairs.tinit();
+    node.pairs.@each(; Expression k, Expression v) {
+        Object key = eval(k, env, alloc);
+        if (key.is_err()) return key;
+        if (try hashable = hashable(key)) {
+            Hash hash = hashable.hash();
+            Object value = eval(v, env, alloc);
+            if (value.is_err()) return value;
+            pairs[hash] = *allocator::new(alloc, HashPair, { key, value });
+        } else {
+            return err("unusable as hash key: %s", key.name()); 
+        }
+    };
+    return allocator::new(alloc, object::HashMap, { pairs });
+}
+
+faultdef UNUSABLE_AS_HASH_KEY;
+
+fn Hashable? hashable(Object key)
+{
+    switch (key.type)
+    {
+        case object::Bool.typeid: return ((object::Bool*) key);
+        case object::Int32.typeid: return ((object::Int32*) key);
+        case object::Str.typeid: return ((object::Str*) key);
+        default: return UNUSABLE_AS_HASH_KEY?; 
+    }
 }
 
 fn Object apply_function(Object fun, List{Object} args, Allocator allocator)

@@ -109,6 +109,7 @@ fn void error_handling() @test {
     `), "unknown operator: bool + bool");
     err_eq(test_eval("foobar"), "identifier not found: foobar");
     err_eq(test_eval(`"Hello" - "World"`), "unknown operator: str - str");
+    err_eq(test_eval(`{"name": "Monkey"}[fn(x) { x }]`), "unusable as hash key: fn");
 }
 
 fn void function_object() @test {
@@ -268,6 +269,14 @@ fn void hash() @test {
     };
 }
 
+fn void hash_index() @test {
+    eq(test_eval(`{"foo": 5}["foo"]`), 5);
+    eq(test_eval(`{"foo": 5}["bar"]`), null);
+    eq(test_eval(`{}["bar"]`), null);
+    eq(test_eval(`{5: 5}[5]`), 5);
+    eq(test_eval(`{true: 5}[true]`), 5);
+}
+
 macro builtin_array_eq(Object obj, ...)
 {
     object::Array* array = (object::Array*) obj;
@@ -277,6 +286,14 @@ macro builtin_array_eq(Object obj, ...)
     for (int i = 0; i< array.elements.len() -1; i++) {
         i32_eq(array.elements[i], expected[i]);
     }
+}
+
+macro void eq(Object obj, expected) {
+    $switch $typeof(expected).typeid:
+        $case int: i32_eq(obj, expected);
+        $case String: str_eq(obj, expected);
+        $default: null_eq(obj);
+    $endswitch
 }
 
 macro void builtin_eq(Object obj, expected) {
