@@ -11,6 +11,7 @@ enum Builtins : (String literal, Builtin obj){
     LAST = { "last", { &builtin_last } },
     REST = { "rest", { &builtin_rest } },
     SLICE = { "slice", { &builtin_slice } },
+    PRINT = { "print", { &builtin_print } },
 }
 
 fn Object builtin_len(List{Object} args)
@@ -96,3 +97,10 @@ fn Object builtin_slice(List{Object} args)
     }
     return array;
 }
+
+fn Object builtin_print(List{Object} args)
+{
+    foreach(arg: args) io::printfn("%s", arg.inspect());
+    return &evaluator::NULL;
+}
+
