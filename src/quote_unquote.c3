@@ -5,7 +5,6 @@ import ast, object, environment;
 
 fn Object quote(Node node, Environment* env, Allocator alloc)
 {
-    io::printfn("quote");
     node = eval_unquote_calls(node, env, alloc);
     return allocator::new(alloc, object::Quote, { 
         .node = node, 
@@ -45,6 +44,14 @@ fn Node convert_object_to_ast_node(Object obj, Allocator alloc)
                 .token = { INT_LITERAL, string::tformat("%d", i32.value) },
                 .value = i32.value,
             });
+        case object::Bool:
+            object::Bool* b = (object::Bool*) obj;
+            return allocator::new(alloc, ast::Bool, {
+                .token = b.value ? { TRUE, "true" } : { FALSE, "false" },
+                .value = b.value,
+            });
+        case Quote:
+            return ((Quote*) obj).node;
         default:
             return null;
     }

@@ -14,6 +14,10 @@ fn void quote() @test {
     quote_eq(test_eval("quote(unquote(4 + 4) + 8)"), "(8 + 8)");
     quote_eq(test_eval("let foobar = 8; quote(foobar)"), "foobar");
     quote_eq(test_eval("let foobar = 8; quote(unquote(foobar))"), "8");
+    quote_eq(test_eval("quote(unquote(true))"), "true");
+    quote_eq(test_eval("quote(unquote(true == false))"), "false");
+    quote_eq(test_eval("quote(unquote(quote(4 + 4)))"), "(4 + 4)");
+    quote_eq(test_eval(`let quotedInfixExpr = quote(4 + 4); quote(unquote(4 + 4) + unquote(quotedInfixExpr))`), "(8 + (4 + 4))");
 }
 
 macro quote_eq(Object obj, expected) {
