@@ -89,6 +89,7 @@ fn Token Lexer.next(&self)
         case RETURN:
         case IF:
         case ELSE:
+        case MACRO:
         case STR_LITERAL:
             break; 
         default: self.read_char(); // needed for single-char tokens
@@ -171,6 +172,7 @@ fn Token Lexer.read_identifier(&self)
         case "if": return {IF, identifier};  
         case "else": return {ELSE, identifier};  
         case "str": return {STR, identifier};  
+        case "macro": return {MACRO, identifier};  
         default: return {IDENTIFIER, identifier};
     }
 }
@@ -223,6 +225,7 @@ enum TokenType : (String literal)
     FALSE          = "false",
     NAMESPACE      = "::",
     RETURN         = "return",
+    MACRO          = "macro",
     IDENTIFIER     = "",
     ILLEGAL        = "",
 }

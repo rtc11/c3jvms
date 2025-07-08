@@ -219,6 +219,16 @@ fn void hash_expression_keys() @test {
     };
 }
 
+fn void expression_macro() @test {
+    Macro* expr = (Macro*) expression(`macro(x, y) { x + y; };`);
+    test::eq(2, expr.parameters.len());
+    identifier_eq(&expr.parameters[0], "x");
+    identifier_eq(&expr.parameters[1], "y");
+    test::eq(1, expr.body.statements.len());
+    ExpressionStatement* body_stmt = (ExpressionStatement*) expr.body.statements[0];
+    test_expression_infix(body_stmt.expression, "x", "+", "y"); 
+}
+
 fn Expression expression(String input) {
     Lexer lexer = lexer::new(input);
     Parser parser = parser::new(lexer, allocator::temp());

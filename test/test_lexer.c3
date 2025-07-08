@@ -29,6 +29,7 @@ fn void next_token() @test
         "foo bar"
         [1, 2];
         {"foo": "bar"}
+        macro(x, y) { x + y; };
     `);
 
     token_eq(lexer.next(), { LET, "let"});
@@ -121,6 +122,20 @@ fn void next_token() @test
     token_eq(lexer.next(), { COLON, ":"});
     token_eq(lexer.next(), { STR_LITERAL, "bar"});
     token_eq(lexer.next(), { R_BRACE, "}"});
+
+    token_eq(lexer.next(), { MACRO, "macro"});
+    token_eq(lexer.next(), { L_PAREN, "("});
+    token_eq(lexer.next(), { IDENTIFIER, "x"});
+    token_eq(lexer.next(), { COMMA, ","});
+    token_eq(lexer.next(), { IDENTIFIER, "y"});
+    token_eq(lexer.next(), { R_PAREN, ")"});
+    token_eq(lexer.next(), { L_BRACE, "{"});
+    token_eq(lexer.next(), { IDENTIFIER, "x"});
+    token_eq(lexer.next(), { PLUS, "+"});
+    token_eq(lexer.next(), { IDENTIFIER, "y"});
+    token_eq(lexer.next(), { SEMICOLON, ";"});
+    token_eq(lexer.next(), { R_BRACE, "}"});
+    token_eq(lexer.next(), { SEMICOLON, ";"});
 
     token_eq(lexer.next(), { EOF, ""});
     test::eq(false, lexer.has_next());

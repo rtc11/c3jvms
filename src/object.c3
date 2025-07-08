@@ -132,3 +132,18 @@ struct Quote (Object)
 }
 fn String Quote.name(&self) @dynamic => "quote";
 fn String Quote.inspect(&self) @dynamic => string::tformat("QUOTE(%s)", self.node);
+
+struct Macro (Object)
+{
+    List{Identifier} parameters;
+    BlockStatement* body;
+    Environment* env;
+}
+fn String Macro.name(&self) @dynamic => "macro";
+fn String Macro.inspect(&self) @dynamic {
+    String[] params = allocator::alloc_array(allocator::temp(), String, self.parameters.len());
+    return string::tformat("macro(%s){\n%s\n}", 
+        string::join(allocator::temp(), params, ", "),
+        self.body,
+    );
+}

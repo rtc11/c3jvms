@@ -254,3 +254,16 @@ fn usz? HashMap.to_format(&self, Formatter* f) @dynamic {
 }
 fn uint Expression.hash(&self) => string::tformat("%s", self).hash(); // used for c3 hashmap
 
+struct Macro (Expression)
+{
+    Token token;
+    List{Identifier} parameters;
+    BlockStatement* body;
+}
+fn void Macro.expression_node(&self) @dynamic {}
+fn String Macro.token_literal(&self) @dynamic => self.token.literal;
+fn usz? Macro.to_format(&self, Formatter* f) @dynamic {
+	String[] params = allocator::alloc_array(allocator::temp(), String, self.parameters.len());
+    foreach(i, p: self.parameters) params[i] = string::tformat("%s", p);
+    return f.printf("%s(%s)%s", self.token_literal(), string::join(allocator::temp(), params, ", "), self.body);
+}

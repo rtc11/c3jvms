@@ -68,6 +68,7 @@ fn Parser new(Lexer lexer, Allocator allocator)
     p.register_prefix(STR_LITERAL, (ParsePrefix)&Parser.parse_str_literal);
     p.register_prefix(L_BRACKET, (ParsePrefix)&Parser.parse_array_literal);
     p.register_prefix(L_BRACE, (ParsePrefix)&Parser.parse_hash_literal);
+    p.register_prefix(MACRO, (ParsePrefix)&Parser.parse_macro_literal);
 
     p.register_infix(PLUS, (ParseInfix)&Parser.parse_infix_expression);
     p.register_infix(MINUS, (ParseInfix)&Parser.parse_infix_expression);
@@ -315,6 +316,18 @@ fn Expression Parser.parse_hash_literal(&self)
         .token = token,
         .pairs = pairs,
     });
+    return (Expression) expr;
+}
+
+fn Expression Parser.parse_macro_literal(&self)
+{
+    Macro* expr = allocator::new(self.allocator, Macro, {
+        .token = self.cur,
+    });
+    if (!self.expect_peek(L_PAREN)) return null;
+    expr.parameters = self.parse_fn_parameters();
+    if (!self.expect_peek(L_BRACE)) return null;
+    expr.body = self.parse_block_statement();
     return (Expression) expr;
 }
 
