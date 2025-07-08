@@ -125,3 +125,10 @@ fn String HashMap.inspect(&self) @dynamic {
 interface Hashable {
      fn Hash hash();
 }
+
+struct Quote (Object)
+{
+    Node node;
+}
+fn String Quote.name(&self) @dynamic => "quote";
+fn String Quote.inspect(&self) @dynamic => string::tformat("QUOTE(%s)", self.node);

@@ -61,7 +61,9 @@ fn Object eval(Node node, Environment* env, Allocator allocator)
                 .body = fun.body, 
             });
         case ast::Call:
-            Object fun = eval(((Call*)node).function, env, allocator);
+            Call* call = (Call*) node;
+            if (call.function.token_literal() == "quote") return quote(call.arguments[0], env, allocator);
+            Object fun = eval(call.function, env, allocator);
             if (fun.is_err()) return fun;
             List{Object} args = eval_expressions(((Call*)node).arguments, env, allocator);
             if (args.len() == 1 && args[0].is_err()) return args[0];
