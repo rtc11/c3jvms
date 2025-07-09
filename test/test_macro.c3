@@ -25,7 +25,8 @@ fn void define() @test
     test::eq("(x + y)", string::tformat("%s", m.body));
 }
 
-struct Test {
+struct Test
+{
     String input;
     String expect;
 }
@@ -80,7 +81,8 @@ fn void expand() @test
     }
 }
 
-fn Program program(String input) {
+fn Program program(String input)
+{
     Lexer lexer = lexer::new(input);
     Parser parser = parser::new(lexer, allocator::temp());
     return parser.parse_program();

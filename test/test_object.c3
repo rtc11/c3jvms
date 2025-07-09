@@ -4,7 +4,8 @@ import std::io;
 import std::collections::list;
 import object;
 
-fn void string_hash_key() @test {
+fn void string_hash_key() @test
+{
     Str hello1 = { "Hello World" };
     Str hello2 = { "Hello World" };
     Str diff1 = { "My name is johnny" };
@@ -14,7 +15,8 @@ fn void string_hash_key() @test {
     test::ne(hello1.hash(), diff1.hash());
 }
 
-fn void i32_hash_key() @test {
+fn void i32_hash_key() @test
+{
     Int32 int1 = { 1};
     Int32 int2 = { 1 };
     Int32 int3 = { 20 };
@@ -25,7 +27,8 @@ fn void i32_hash_key() @test {
     test::ne(str1.hash(), int1.hash());
 }
 
-fn void bool_hash_key() @test {
+fn void bool_hash_key() @test
+{
     Bool bt1 = { true };
     Bool bt2 = { true };
     Bool bf = { false };
@@ -34,7 +37,8 @@ fn void bool_hash_key() @test {
     test::ne(bt1.hash(), bf.hash());
 }
 
-fn void i32_bool_hash_key() @test {
+fn void i32_bool_hash_key() @test
+{
     Bool t = { true };
     Bool f = { false };
     Int32 i1 = { 1 };

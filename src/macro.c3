@@ -62,15 +62,15 @@ fn Environment* extend_macro_env(object::Macro* mac, List{Quote} args, Allocator
 
 fn bool is_macro(Statement node)
 {
-    if (node.type != LetStmt.typeid) return false;
-    LetStmt* let = (LetStmt*) node;
+    if (node.type != LetStatement.typeid) return false;
+    LetStatement* let = (LetStatement*) node;
     if (let.value.type != ast::Macro.typeid) return false;
     return true;
 }
 
 fn void add_macro(Statement stmt, Environment* env, Allocator alloc)
 {
-    LetStmt* let = (LetStmt*) stmt;
+    LetStatement* let = (LetStatement*) stmt;
     ast::Macro* am = (ast::Macro*) let.value;
     object::Macro* om = allocator::new(alloc, object::Macro, {
         .parameters = am.parameters,

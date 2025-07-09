@@ -11,15 +11,8 @@ interface Node
     fn usz? to_format(Formatter* f);
 }
 
-interface Statement: Node
-{
-    fn void statement_node();
-}
-
-interface Expression: Node
-{
-    fn void expression_node();
-}
+interface Statement: Node {}
+interface Expression: Node {}
 
 struct Program (Node)
 {
@@ -27,10 +20,8 @@ struct Program (Node)
 }
 
 fn String Program.token_literal(&self) @dynamic {
-    if (self.statements.size > 0) {
-        return self.statements[0].token_literal();
-    }
-    return "";
+    if (self.statements.size == 0) return "";
+    return self.statements[0].token_literal();
 }
 fn usz? Program.to_format(&self, Formatter* f) @dynamic {
     usz out;
@@ -43,21 +34,19 @@ struct Identifier (Expression)
     Token token;
     String value;
 }
-fn void Identifier.expression_node(&self) @dynamic {}
 fn String Identifier.token_literal(&self) @dynamic => self.token.literal;
 fn usz? Identifier.to_format(&self, Formatter* f) @dynamic {
     return f.printf("%s", self.value);
 }
 
-struct LetStmt (Statement)
+struct LetStatement (Statement)
 {
     Token token;
     Identifier name;
     Expression value;
 }
-fn void LetStmt.statement_node(&self) @dynamic {}
-fn String LetStmt.token_literal(&self) @dynamic => self.token.literal;
-fn usz? LetStmt.to_format(&self, Formatter* f) @dynamic {
+fn String LetStatement.token_literal(&self) @dynamic => self.token.literal;
+fn usz? LetStatement.to_format(&self, Formatter* f) @dynamic {
     if (self.value == null) return f.printf("%s %s = null;", self.token_literal(), self.name);
     return f.printf("%s %s = %s;", self.token_literal(), self.name, self.value);
 }
@@ -67,7 +56,6 @@ struct ReturnStatement (Statement)
     Token token;
     Expression return_value;
 }
-fn void ReturnStatement.statement_node(&self) @dynamic {}
 fn String ReturnStatement.token_literal(&self) @dynamic => self.token.literal;
 fn usz? ReturnStatement.to_format(&self, Formatter* f) @dynamic {
     if (self.return_value == null) return f.printf("%s;", self.token_literal());
@@ -79,7 +67,6 @@ struct ExpressionStatement (Statement)
     Token token;
     Expression expression;
 }
-fn void ExpressionStatement.statement_node(&self) @dynamic {}
 fn String ExpressionStatement.token_literal(&self) @dynamic => self.token.literal;
 fn usz? ExpressionStatement.to_format(&self, Formatter* f) @dynamic {
     if (self.expression == null) return f.printf("");
@@ -91,7 +78,6 @@ struct IntLiteral (Expression)
     Token token;
     int value; 
 }
-fn void IntLiteral.expression_node(&self) @dynamic {}
 fn String IntLiteral.token_literal(&self) @dynamic => self.token.literal;
 fn usz? IntLiteral.to_format(&self, Formatter* f) @dynamic {
     return f.printf("%s", self.token.literal);
@@ -103,7 +89,6 @@ struct PrefixExpression (Expression)
     String operator;
     Expression right;
 }
-fn void PrefixExpression.expression_node(&self) @dynamic {}
 fn String PrefixExpression.token_literal(&self) @dynamic => self.token.literal;
 fn usz? PrefixExpression.to_format(&self, Formatter* f) @dynamic {
     if (self.right == null) return f.printf("(%snull)", self.operator);
@@ -117,7 +102,6 @@ struct InfixExpression (Expression)
     String operator;
     Expression right;
 }
-fn void InfixExpression.expression_node(&self) @dynamic {}
 fn String InfixExpression.token_literal(&self) @dynamic => self.token.literal;
 fn usz? InfixExpression.to_format(&self, Formatter* f) @dynamic {
     usz out = f.printf("(")!;
@@ -133,7 +117,6 @@ struct Bool (Expression)
     Token token;
     bool value;
 }
-fn void Bool.expression_node(&self) @dynamic {}
 fn String Bool.token_literal(&self) @dynamic => self.token.literal;
 fn usz? Bool.to_format(&self, Formatter* f) @dynamic {
     return f.printf("%s", self.token.literal);
@@ -146,7 +129,6 @@ struct If (Expression)
     BlockStatement* consequence;
     BlockStatement* alternative;
 }
-fn void If.expression_node(&self) @dynamic {}
 fn String If.token_literal(&self) @dynamic => self.token.literal;
 fn usz? If.to_format(&self, Formatter* f) @dynamic {
     usz out = f.printf("if%s %s", self.condition, self.consequence)!;
@@ -159,7 +141,6 @@ struct BlockStatement (Statement)
     Token token;
     List{Statement} statements;
 }
-fn void BlockStatement.statement_node(&self) @dynamic {}
 fn String BlockStatement.token_literal(&self) @dynamic => self.token.literal;
 fn usz? BlockStatement.to_format(&self, Formatter* f) @dynamic {
     usz out;
@@ -173,7 +154,6 @@ struct Fn (Expression)
     List{Identifier} parameters;
     BlockStatement* body;
 }
-fn void Fn.expression_node(&self) @dynamic {}
 fn String Fn.token_literal(&self) @dynamic => self.token.literal;
 fn usz? Fn.to_format(&self, Formatter* f) @dynamic {
     usz out = f.printf("%s(", self.token_literal())!;
@@ -190,7 +170,6 @@ struct Call (Expression)
     Expression function;
     List{Expression} arguments;
 }
-fn void Call.expression_node(&self) @dynamic {}
 fn String Call.token_literal(&self) @dynamic => self.token.literal;
 fn usz? Call.to_format(&self, Formatter* f) @dynamic {
     usz out;
@@ -206,7 +185,6 @@ struct StrLiteral (Expression)
     Token token;
     String value;
 }
-fn void StrLiteral.expression_node(&self) @dynamic {}
 fn String StrLiteral.token_literal(&self) @dynamic => self.token.literal;
 fn usz? StrLiteral.to_format(&self, Formatter* f) @dynamic {
     return f.printf("%s", self.token.literal);
@@ -217,7 +195,6 @@ struct Array (Expression)
     Token token;
     List{Expression} elements;
 }
-fn void Array.expression_node(&self) @dynamic {}
 fn String Array.token_literal(&self) @dynamic => self.token.literal;
 fn usz? Array.to_format(&self, Formatter* f) @dynamic {
 	String[] elems = allocator::alloc_array(allocator::temp(), String, self.elements.len());
@@ -231,7 +208,6 @@ struct Index(Expression)
     Expression left;
     Expression index;
 }
-fn void Index.expression_node(&self) @dynamic {}
 fn String Index.token_literal(&self) @dynamic => self.token.literal;
 fn usz? Index.to_format(&self, Formatter* f) @dynamic {
 	return f.printf("(%s[%s])", self.left, self.index);
@@ -242,7 +218,6 @@ struct HashMap (Expression)
     Token token;
     map::HashMap{Expression, Expression} pairs;
 }
-fn void HashMap.expression_node(&self) @dynamic {}
 fn String HashMap.token_literal(&self) @dynamic => self.token.literal;
 fn usz? HashMap.to_format(&self, Formatter* f) @dynamic {
 	String[] pairs = allocator::alloc_array(allocator::temp(), String, self.pairs.len());
@@ -260,7 +235,6 @@ struct Macro (Expression)
     List{Identifier} parameters;
     BlockStatement* body;
 }
-fn void Macro.expression_node(&self) @dynamic {}
 fn String Macro.token_literal(&self) @dynamic => self.token.literal;
 fn usz? Macro.to_format(&self, Formatter* f) @dynamic {
 	String[] params = allocator::alloc_array(allocator::temp(), String, self.parameters.len());

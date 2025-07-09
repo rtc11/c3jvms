@@ -1,8 +1,8 @@
 module test::lexer;
 
-import lexer;
 import std::io;
 import std::collections::list;
+import lexer;
 
 fn void next_token() @test
 {

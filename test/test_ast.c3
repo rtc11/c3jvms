@@ -1,8 +1,8 @@
 module test::ast @test;
 
-import lexer, ast;
 import std::io;
 import std::collections::list;
+import lexer, ast;
 
 fn void to_format() @test
 {
@@ -12,7 +12,7 @@ fn void to_format() @test
         .token = { IDENTIFIER, "another" },
         .value = "another",
     }); 
-    LetStmt* stmt = allocator::new(allocator::temp(), LetStmt, { 
+    LetStatement* stmt = allocator::new(allocator::temp(), LetStatement, { 
         .token = { LET, "let" },
         .name = { 
             .token = { IDENTIFIER, "my" },

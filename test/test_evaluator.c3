@@ -5,7 +5,8 @@ import std::collections::list;
 import std::collections::map;
 import evaluator, object, ast, parser, lexer, environment;
 
-fn void eval_expression_i32() @test {
+fn void eval_expression_i32() @test
+{
     i32_eq(test_eval("5"), 5);
     i32_eq(test_eval("10"), 10);
     i32_eq(test_eval("-5"), -5);
@@ -23,7 +24,8 @@ fn void eval_expression_i32() @test {
     i32_eq(test_eval("(5 + 10 * 2 + 15 / 3) * 2 + -10"), 50);
 }
 
-fn void eval_expression_bool() @test {
+fn void eval_expression_bool() @test
+{
     bool_eq(test_eval("true"), true);
     bool_eq(test_eval("false"), false);
     bool_eq(test_eval("1 < 2"), true);
@@ -47,10 +49,10 @@ fn void eval_expression_bool() @test {
     bool_eq(test_eval("(1 > 2) == (1 < 2)"), false);
     bool_eq(test_eval("(1 > 2) != (1 > 2)"), false);
     bool_eq(test_eval("(1 > 2) != (1 < 2)"), true);
-
 }
 
-fn void operator_bang() @test {
+fn void operator_bang() @test
+{
     bool_eq(test_eval("!true"), false);
     bool_eq(test_eval("!false"), true);
     bool_eq(test_eval("!5"), false);
@@ -59,7 +61,8 @@ fn void operator_bang() @test {
     bool_eq(test_eval("!!5"), true);
 }
 
-fn void eval_expression_if_else() @test {
+fn void eval_expression_if_else() @test
+{
     if_else_eq(test_eval("if (true) { 10 }"), 10);
     if_else_eq(test_eval("if (true) { 10 }"), 10);
     if_else_eq(test_eval("if (false) { 10 }"), null);
@@ -70,7 +73,8 @@ fn void eval_expression_if_else() @test {
     if_else_eq(test_eval("if (1 > 2) { 10 } else { 20 }"), 20);
 }
 
-fn void eval_stmt_return() @test {
+fn void eval_stmt_return() @test
+{
     i32_eq(test_eval("return 10;"), 10);
     i32_eq(test_eval("return 10; 9;"), 10);
     i32_eq(test_eval("return 2 * 5; 9;"), 10);
@@ -85,14 +89,16 @@ fn void eval_stmt_return() @test {
     `), 10);
 }
 
-fn void eval_stmt_i32() @test {
+fn void eval_stmt_i32() @test
+{
     i32_eq(test_eval("let a = 5; a;"), 5);
     i32_eq(test_eval("let a = 5 * 5; a;"), 25);
     i32_eq(test_eval("let a = 5; let b = a; b;"), 5);
     i32_eq(test_eval("let a = 5; let b = a; let c = a + b + 5; c;"), 15);
 }
 
-fn void error_handling() @test {
+fn void error_handling() @test
+{
     err_eq(test_eval("5 + true;"), "type mismatch: i32 + bool");
     err_eq(test_eval("5 + true; 5;"), "type mismatch: i32 + bool");
     err_eq(test_eval("-true"), "unknown operator: -bool");
@@ -112,7 +118,8 @@ fn void error_handling() @test {
     err_eq(test_eval(`{"name": "Monkey"}[fn(x) { x }]`), "unusable as hash key: fn");
 }
 
-fn void function_object() @test {
+fn void function_object() @test
+{
     Object e = test_eval("fn(x) { x + 2; };");
     object::Fn* fun = (object::Fn*) e;
     test::eq(1, fun.parameters.len());
@@ -120,7 +127,8 @@ fn void function_object() @test {
     test::eq(string::tformat("%s", fun.body), "(x + 2)");
 }
 
-fn void function_application() @test {
+fn void function_application() @test
+{
     i32_eq(test_eval("let identity = fn(x) { x; }; identity(5);"), 5);
     i32_eq(test_eval("let identity = fn(x) { return x; }; identity(5);"), 5);
     i32_eq(test_eval("let double = fn(x) { x * 2; }; double(5);"), 10);
@@ -128,7 +136,8 @@ fn void function_application() @test {
     i32_eq(test_eval("let add = fn(x, y) { x + y; }; add(5 + 5, add(5, 5));"), 20);
 }
 
-fn void closures() @test {
+fn void closures() @test
+{
     i32_eq(test_eval(`
         let new_adder = fn(x) {
             fn(y) { x + y };
@@ -144,11 +153,13 @@ fn void closures() @test {
     `), 4);
 }
 
-fn void str_concat() @test {
+fn void str_concat() @test
+{
     str_eq(test_eval(`"Hello" + " " + "World";`), "Hello World");
 }
 
-fn void builtin_fn() @test {
+fn void builtin_fn() @test
+{
     builtin_eq(test_eval(`len("")`), 0);
     builtin_eq(test_eval(`len("abc")`), 3);
     builtin_eq(test_eval(`first([1, 2, 3])`), 1);
@@ -157,7 +168,8 @@ fn void builtin_fn() @test {
     builtin_eq(test_eval(`let a = [4,5,6]; last(a);`), 6);
 }
 
-fn void builtin_slice() @test {
+fn void builtin_slice() @test
+{
     builtin_array_eq(test_eval(`slice([1, 2, 3, 4, 5], 0, 0)`), 1);
     builtin_array_eq(test_eval(`slice([1, 2, 3, 4, 5], 1, 1)`), 2);
     builtin_array_eq(test_eval(`slice([1, 2, 3, 4, 5], 2, 2)`), 3);
@@ -170,20 +182,23 @@ fn void builtin_slice() @test {
     builtin_array_eq(test_eval(`slice([1, 2, 3, 4, 5], -2, 2)`), 1, 2, 3);
 }
 
-fn void builtin_rest() @test {
+fn void builtin_rest() @test
+{
     builtin_array_eq(test_eval(`rest([1, 2, 3])`), 2, 3 );
     builtin_array_eq(test_eval(`rest(rest([1, 2, 3]))`), 3 );
     builtin_array_eq(test_eval(`rest(rest(rest([1, 2, 3])))`));
     null_eq(test_eval(`rest(rest(rest(rest([1, 2, 3]))))`));
 }
 
-fn void builtin_push() @test {
+fn void builtin_push() @test
+{
     builtin_array_eq(test_eval(`let a = [1]; push(a, 2);`), 1, 2);
     builtin_array_eq(test_eval(`let a = []; push(a, 1);`), 1);
 }
 
 // TODO: move to stdlib
-fn void map() @test {
+fn void map() @test
+{
     builtin_array_eq(test_eval(`
         let map = fn(arr, f) {
             let iter = fn(arr, acc) {
@@ -202,7 +217,8 @@ fn void map() @test {
 }
 
 // TODO: move to stdlib
-fn void reduce() @test {
+fn void reduce() @test
+{
     i32_eq(test_eval(`
         let reduce = fn(arr, init, f) {
             let iter = fn(arr, acc) {
@@ -221,12 +237,14 @@ fn void reduce() @test {
     `), 15);
 }
 
-fn void array() @test {
+fn void array() @test
+{
     builtin_array_eq(test_eval("[]"));
     builtin_array_eq(test_eval("[1, 2 * 2, 3 + 3]"), 1, 4, 6);
 }
 
-fn void array_index() @test {
+fn void array_index() @test
+{
     i32_eq(test_eval("[1, 2, 3][0]"), 1);
     i32_eq(test_eval("[1, 2, 3][1]"), 2);
     i32_eq(test_eval("[1, 2, 3][2]"), 3);
@@ -239,7 +257,8 @@ fn void array_index() @test {
     null_eq(test_eval("[1, 2, 3][-1]"));
 }
 
-fn void hash() @test {
+fn void hash() @test
+{
     Object obj = test_eval(`
         let two = "two";
         {
@@ -269,7 +288,8 @@ fn void hash() @test {
     };
 }
 
-fn void hash_index() @test {
+fn void hash_index() @test
+{
     eq(test_eval(`{"foo": 5}["foo"]`), 5);
     eq(test_eval(`{"foo": 5}["bar"]`), null);
     eq(test_eval(`{}["bar"]`), null);
@@ -288,7 +308,8 @@ macro builtin_array_eq(Object obj, ...)
     }
 }
 
-macro void eq(Object obj, expected) {
+macro void eq(Object obj, expected)
+{
     $switch $typeof(expected).typeid:
         $case int: i32_eq(obj, expected);
         $case String: str_eq(obj, expected);
@@ -296,35 +317,41 @@ macro void eq(Object obj, expected) {
     $endswitch
 }
 
-macro void builtin_eq(Object obj, expected) {
+macro void builtin_eq(Object obj, expected)
+{
     $switch $typeof(expected).typeid:
         $case int: i32_eq(obj, expected);
         $case String: err_eq(obj, expected);
     $endswitch
 }
 
-fn void str_eq(Object obj, String expected) {
+fn void str_eq(Object obj, String expected)
+{
     object::Str* res = (object::Str*) obj;
     test::eq(expected, res.value);
 }
 
-fn void err_eq(Object obj, String err_msg){
+fn void err_eq(Object obj, String err_msg
+               ){
     Error* err_obj = (Error*) obj;
     test::eq(err_msg, err_obj.message);
 }
 
-macro if_else_eq(Object obj, expected) {
+macro if_else_eq(Object obj, expected)
+{
     $switch $typeof(expected).typeid:
         $case int: i32_eq(obj, expected);
         $default: null_eq(obj);
     $endswitch
 }
 
-fn void null_eq(Object obj) {
+fn void null_eq(Object obj)
+{
     test::eq(obj.type, Null.typeid);
 }
 
-fn Object test_eval(String input) {
+fn Object test_eval(String input)
+{
     Lexer lexer = lexer::new(input);
     Parser parser = parser::new(lexer, allocator::temp());
     Program prog = parser.parse_program();
@@ -332,12 +359,15 @@ fn Object test_eval(String input) {
     return evaluator::eval(&prog, env, allocator::temp());
 }
 
-fn void i32_eq(Object obj, int expected) {
+fn void i32_eq(Object obj, int expected)
+{
     object::Int32* res = (object::Int32*) obj;
     test::eq(expected, res.value);
 }
 
-fn void bool_eq(Object obj, bool expected) {
+fn void bool_eq(Object obj, bool expected)
+{
     object::Bool* res = (object::Bool*) obj;
     test::eq(expected, res.value);
 }
+

@@ -3,7 +3,8 @@ module test::evaluator;
 import std::io;
 import evaluator, object, parser, lexer, environment;
 
-fn void quote() @test {
+fn void quote() @test
+{
     quote_eq(test_eval("quote(5)"), "5");
     quote_eq(test_eval("quote(5 + 8)"), "(5 + 8)");
     quote_eq(test_eval("quote(foobar)"), "foobar");
@@ -20,7 +21,8 @@ fn void quote() @test {
     quote_eq(test_eval(`let quotedInfixExpr = quote(4 + 4); quote(unquote(4 + 4) + unquote(quotedInfixExpr))`), "(8 + (4 + 4))");
 }
 
-macro quote_eq(Object obj, expected) {
+macro quote_eq(Object obj, expected)
+{
     switch (obj.type) {
         case Quote:
             object::Quote* res = (object::Quote*) obj;

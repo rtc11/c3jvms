@@ -7,7 +7,8 @@ import environment;
 
 alias TestCase = Node[2]; // [input, expected]
 
-fn void node() @test {
+fn void node() @test
+{
     TestCase[*] cases = {
         { one(), two() },
         { program(one()), program(two()) },
@@ -28,7 +29,8 @@ fn void node() @test {
     }
 }
 
-fn void hash() @test {
+fn void hash() @test
+{
     
     map::HashMap{Expression, Expression} pairs;
     pairs.tinit();
@@ -139,7 +141,7 @@ fn Node return_stmt(Expression value)
 
 fn Node let(Expression value)
 {
-    return allocator::new(allocator::temp(), LetStmt, {
+    return allocator::new(allocator::temp(), LetStatement, {
         .value = value,
     });
 }
@@ -211,9 +213,9 @@ fn void deep_eq(Node expected, Node actual)
             ReturnStatement* exp = (ReturnStatement*) expected;
             ReturnStatement* act = (ReturnStatement*) actual;
             deep_eq(exp.return_value, act.return_value);
-        case LetStmt:
-            LetStmt* exp = (LetStmt*) expected;
-            LetStmt* act = (LetStmt*) actual;
+        case LetStatement:
+            LetStatement* exp = (LetStatement*) expected;
+            LetStatement* act = (LetStatement*) actual;
             deep_eq(exp.value, act.value);
         case Fn:
             Fn* exp = (Fn*) expected;

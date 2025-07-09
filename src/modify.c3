@@ -45,8 +45,8 @@ fn Node modify(Node node, Modifier modifier, Environment* env, Allocator alloc)
             ReturnStatement* expr = (ReturnStatement*) node;
             expr.return_value = (Expression) modify(expr.return_value, modifier, env, alloc);
 
-        case LetStmt:
-            LetStmt* expr = (LetStmt*) node;
+        case LetStatement:
+            LetStatement* expr = (LetStatement*) node;
             expr.value = (Expression) modify(expr.value, modifier, env, alloc);
 
         case Fn:

@@ -108,7 +108,7 @@ fn Program Parser.parse_program(&self)
     while (self.cur.type != EOF) {
         switch (self.cur.type) {
             case LET: 
-                LetStmt* stmt = self.parse_let_stmt();
+                LetStatement* stmt = self.parse_let_stmt();
                 if (stmt != null) stmts.push(stmt);
             case RETURN:
                 ReturnStatement* stmt = self.parse_return_stmt();
@@ -122,9 +122,9 @@ fn Program Parser.parse_program(&self)
     return { stmts };
 }
 
-fn LetStmt* Parser.parse_let_stmt(&self)
+fn LetStatement* Parser.parse_let_stmt(&self)
 {
-    LetStmt* stmt = allocator::new(self.allocator, LetStmt, { .token = self.cur });
+    LetStatement* stmt = allocator::new(self.allocator, LetStatement, { .token = self.cur });
     if (!self.expect_peek(IDENTIFIER)) return null;
     stmt.name = { self.cur, self.cur.literal };
     if (!self.expect_peek(ASSIGN)) return null;
@@ -394,7 +394,7 @@ fn BlockStatement* Parser.parse_block_statement(&self)
     while(!self.cur_token_is(R_BRACE) && !self.cur_token_is(EOF)) {
         switch (self.cur.type) {
             case LET: 
-                LetStmt* stmt = self.parse_let_stmt();
+                LetStatement* stmt = self.parse_let_stmt();
                 if (stmt != null) stmts.push(stmt);
             case RETURN:
                 ReturnStatement* stmt = self.parse_return_stmt();
