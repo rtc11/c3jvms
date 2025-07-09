@@ -6,9 +6,12 @@ import lexer, parser, ast, evaluator, environment, object;
 
 fn void main()
 {
-    Allocator alloc = allocator::heap();
     print_logo();
+
+    Allocator alloc = allocator::heap();
     Environment* env = environment::new(alloc);
+    Environment* macro_env = environment::new(alloc);
+
     while (true)
     {
         io::printf("$ ");
@@ -23,14 +26,17 @@ fn void main()
             }
         }
 
-        Object evaluated = evaluator::eval(&program, env, alloc);
+        evaluator::define_macro(&program, macro_env, alloc);
+        Node expanded = evaluator::expand_macro(&program, macro_env, alloc);
+        Object evaluated = evaluator::eval(expanded, macro_env, alloc);
+
         io::printfn("%s", colorize_str(string::tformat("%s", evaluated.inspect())));
     }
 }
 
 fn void print_logo() {
     String logo = colorize_chars(
-`  __  repl thx        
+`  __  repl
 _/  |_ ___.__.
 \   __<   |  |
  |  |  \___  |
@@ -55,6 +61,7 @@ fn String colorize_chars(String str) {
 fn String colorize_red(String str) {
     return string::tformat("\x1b[38;2;%d;%d;%d;m%s%s", 220, 20, 60, str, RESET_COLOR);
 }
+
 fn String colorize_str(String str) {
     Color color = { rand(150)+50, rand(150)+50,rand(150)+50 };
     return string::tformat("\x1b[38;2;%d;%d;%d;m%s%s", color[0], color[1], color[2], str, RESET_COLOR);
