@@ -25,6 +25,19 @@ fn void define() @test
     test::eq("(x + y)", string::tformat("%s", m.body));
 }
 
+fn void expand() @test
+{
+    Environment* env = environment::new(allocator::temp());
+    Program prog = program(`
+        let infixexpr = macro() { quote(1 + 2); };
+        infixexpr();
+    `);
+    Program expected = program(`(1 + 2)`);
+    evaluator::define_macro(&prog, env, allocator::temp());
+    Node actual = evaluator::expand_macro(&prog, env, allocator::temp());
+    test::eq(string::tformat("%s", expected), string::tformat("%s", actual));
+}
+
 fn Program program(String input) {
     Lexer lexer = lexer::new(input);
     Parser parser = parser::new(lexer, allocator::temp());
