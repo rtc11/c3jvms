@@ -37,7 +37,7 @@ fn Class? new(Reader* r)
     return class;
 }
 
-enum AccessFlag: (inline ushort flag)
+enum AccessFlag: (ushort flag)
 {
     PUBLIC     = 0x0001,
     PRIVATE    = 0x0002,
@@ -55,7 +55,7 @@ enum AccessFlag: (inline ushort flag)
     MODULE     = 0x8000,
 }
 
-enum MethodAccessFlag: (inline ushort flag)
+enum MethodAccessFlag: (ushort flag)
 {
     PUBLIC       = 0x0001,
     PRIVATE      = 0x0002,

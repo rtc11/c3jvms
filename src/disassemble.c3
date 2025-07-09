@@ -36,7 +36,8 @@ macro flags($Enum, ushort bytes)
     List{$Enum} flags;
     flags.tinit();
     $foreach $value : $Enum.values: 
-        if (bytes & $value) flags.push($value);
+        // expects all these enums to have associated "ushort flag"
+        if (bytes & $value.flag) flags.push($value); 
     $endforeach
     return flags;
 }

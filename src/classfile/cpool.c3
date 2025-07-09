@@ -99,7 +99,7 @@ fn MethodHandleKind? ConstPool.reference_kind(&self, usz idx)
     }
 }
 
-enum MethodHandleKind: (inline char kind)
+enum MethodHandleKind: (char kind)
 {
     GET_FIELD          = 1,
     GET_STATIC         = 2,
@@ -118,7 +118,7 @@ fn usz? ConstPool.to_format(&self, Formatter* f) @dynamic {
     return n;
 }
 
-enum Tag: (inline char tag)
+enum Tag: (char tag)
 {
     NULL             = 0, // unused
     UTF8             = 1,
