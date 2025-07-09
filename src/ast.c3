@@ -73,13 +73,13 @@ fn usz? ExpressionStatement.to_format(&self, Formatter* f) @dynamic {
     return f.printf("%s", self.expression);
 }
 
-struct IntLiteral (Expression)
+struct Int32 (Expression)
 {
     Token token;
     int value; 
 }
-fn String IntLiteral.token_literal(&self) @dynamic => self.token.literal;
-fn usz? IntLiteral.to_format(&self, Formatter* f) @dynamic {
+fn String Int32.token_literal(&self) @dynamic => self.token.literal;
+fn usz? Int32.to_format(&self, Formatter* f) @dynamic {
     return f.printf("%s", self.token.literal);
 }
 

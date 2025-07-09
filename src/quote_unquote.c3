@@ -38,9 +38,9 @@ fn Node convert_object_to_ast_node(Object obj, Allocator alloc)
 {
     switch (obj.type)
     {
-        case Int32:
-            Int32* i32 = (Int32*) obj;
-            return allocator::new(alloc, IntLiteral, {
+        case object::Int32:
+            object::Int32* i32 = (object::Int32*) obj;
+            return allocator::new(alloc, ast::Int32, {
                 .token = { INT_LITERAL, string::tformat("%d", i32.value) },
                 .value = i32.value,
             });

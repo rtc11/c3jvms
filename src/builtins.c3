@@ -22,11 +22,11 @@ fn Object builtin_len(List{Object} args)
         case Str:
             Str* str = (Str*) args[0];
             int len = str.value.len;
-            return allocator::new(allocator::temp(), Int32, { .value = len });
+            return allocator::new(allocator::temp(), object::Int32, { .value = len });
         case Array:
             Array* array = (Array*) args[0];
             int len = (int) array.elements.len();
-            return allocator::new(allocator::temp(), Int32, { .value = len });
+            return allocator::new(allocator::temp(), object::Int32, { .value = len });
         default: 
             return evaluator::err("argument to `len` is not supported: %s", args[0].name());
     }
@@ -81,12 +81,12 @@ fn Object builtin_slice(List{Object} args)
 {
     if (args.len() != 3) return evaluator::err("wrong number of arguments: %d, expected: %d", args.len(), 3);
     if (args[0].type != Array.typeid) return evaluator::err("1st arg to 'slice' must be array, got: %s", args[0].name());
-    if (args[1].type != Int32.typeid) return evaluator::err("2nd arg to 'slice' must be i32, got: %s", args[1].name());
-    if (args[2].type != Int32.typeid) return evaluator::err("3rd arg to 'slice' must be i32, got: %s", args[2].name());
+    if (args[1].type != object::Int32.typeid) return evaluator::err("2nd arg to 'slice' must be i32, got: %s", args[1].name());
+    if (args[2].type != object::Int32.typeid) return evaluator::err("3rd arg to 'slice' must be i32, got: %s", args[2].name());
     Array* array = (Array*) args[0];
     usz len = array.elements.len();
-    int from = ((Int32*) args[1]).value;
-    int to = ((Int32*) args[2]).value;
+    int from = ((object::Int32*) args[1]).value;
+    int to = ((object::Int32*) args[2]).value;
     if (to >= len) to = (int) len - 1;
     if (from < 0) from = 0;
     if (from <= to && from >= 0) {

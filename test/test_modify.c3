@@ -45,21 +45,21 @@ fn void hash() @test
     modify(hm, &turn_one_into_two, env, allocator::temp());
 
     hm.pairs.@each(; Expression k, Expression v) {
-        IntLiteral* key = (IntLiteral*) k;
+        ast::Int32* key = (ast::Int32*) k;
         test::eq(2, key.value);
-        IntLiteral* value = (IntLiteral*) v;
+        ast::Int32* value = (ast::Int32*) v;
         test::eq(2, value.value);
     };
 }
 
-fn Expression one() => allocator::new(allocator::temp(), IntLiteral, { .value = 1 });
-fn Expression two() => allocator::new(allocator::temp(), IntLiteral, { .value = 2 });
+fn Expression one() => allocator::new(allocator::temp(), ast::Int32, { .value = 1 });
+fn Expression two() => allocator::new(allocator::temp(), ast::Int32, { .value = 2 });
 
 fn Node turn_one_into_two(Node node, Environment* env, Allocator alloc)
 {
     switch(node.type) {
-        case IntLiteral:  
-            IntLiteral* integer = (IntLiteral*) node;
+        case ast::Int32:  
+            ast::Int32* integer = (ast::Int32*) node;
             if (integer.value != 1) return node;
             integer.value = 2;
             return integer;
@@ -178,9 +178,9 @@ fn void deep_eq(Node expected, Node actual)
             ExpressionStatement* exp = (ExpressionStatement*) expected;
             ExpressionStatement* act = (ExpressionStatement*) actual;
             deep_eq(exp.expression, act.expression);
-        case IntLiteral:
-            IntLiteral* exp = (IntLiteral*) expected;
-            IntLiteral* act = (IntLiteral*) actual;
+        case ast::Int32:
+            ast::Int32* exp = (ast::Int32*) expected;
+            ast::Int32* act = (ast::Int32*) actual;
             test::eq(exp.value, act.value);
         case InfixExpression:
             InfixExpression* exp = (InfixExpression*) expected;

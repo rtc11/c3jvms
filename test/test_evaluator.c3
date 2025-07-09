@@ -278,7 +278,7 @@ fn void hash() @test
     expected[(Str){"one"}.hash()] = 1;
     expected[(Str){"two"}.hash()] = 2;
     expected[(Str){"three"}.hash()] = 3;
-    expected[(Int32){4}.hash()] = 4;
+    expected[(object::Int32){4}.hash()] = 4;
     expected[(object::Bool){true}.hash()] = 5;
     expected[(object::Bool){false}.hash()] = 6;
     test::eq(expected.len(), hm.pairs.len());

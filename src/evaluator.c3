@@ -21,8 +21,8 @@ fn Object eval(Node node, Environment* env, Allocator allocator)
             return eval_program(((Program*) node), env, allocator);
         case ExpressionStatement: 
             return eval(((ExpressionStatement*) node).expression, env, allocator);
-        case IntLiteral: 
-            return allocator::new(allocator, Int32, { .value = ((IntLiteral*) node).value });
+        case ast::Int32: 
+            return allocator::new(allocator, object::Int32, { .value = ((ast::Int32*) node).value });
         case LetStatement:
             LetStatement* stmt = (LetStatement*) node;
             Object i = eval(stmt.value, env, allocator);
@@ -137,7 +137,7 @@ fn Object eval_infix_expr(String operator, Object left, Object right, Allocator 
 {
     switch 
     {
-        case left.type == Int32.typeid && right.type == Int32.typeid: return eval_expr_infix_i32(operator, left, right, allocator);
+        case left.type == object::Int32.typeid && right.type == object::Int32.typeid: return eval_expr_infix_i32(operator, left, right, allocator);
         case left.type != right.type: return err("type mismatch: %s %s %s", left.name(), operator, right.name());
         case left.type == Str.typeid && right.type == Str.typeid: return eval_expr_infix_str(operator, left, right, allocator);
         case operator == "==": return left == right ? &TRUE : &FALSE;
@@ -148,14 +148,14 @@ fn Object eval_infix_expr(String operator, Object left, Object right, Allocator 
 
 fn Object eval_expr_infix_i32(String operator, Object left, Object right, Allocator a)
 {
-    int lval = ((Int32*) left).value;
-    int rval = ((Int32*) right).value;
+    int lval = ((object::Int32*) left).value;
+    int rval = ((object::Int32*) right).value;
     switch (operator)
     {
-        case "+": return allocator::new(a, Int32, { .value = lval + rval });
-        case "-": return allocator::new(a, Int32, { .value = lval - rval });
-        case "*": return allocator::new(a, Int32, { .value = lval * rval });
-        case "/": return allocator::new(a, Int32, { .value = lval / rval });
+        case "+": return allocator::new(a, object::Int32, { .value = lval + rval });
+        case "-": return allocator::new(a, object::Int32, { .value = lval - rval });
+        case "*": return allocator::new(a, object::Int32, { .value = lval * rval });
+        case "/": return allocator::new(a, object::Int32, { .value = lval / rval });
         case "<": return lval < rval ? &TRUE : &FALSE;
         case ">": return lval > rval ? &TRUE : &FALSE;
         case "==": return lval == rval  ? &TRUE : &FALSE;
@@ -185,9 +185,9 @@ fn Object eval_expr_operator_bang(Object right)
 
 fn Object eval_expr_operator_minus(Object right, Allocator allocator)
 {
-    if (right.type != Int32.typeid) return err("unknown operator: -%s", right.name());
-    int value = ((Int32*) right).value;
-    return allocator::new(allocator, Int32, { .value = -value });
+    if (right.type != object::Int32.typeid) return err("unknown operator: -%s", right.name());
+    int value = ((object::Int32*) right).value;
+    return allocator::new(allocator, object::Int32, { .value = -value });
 }
 
 fn Object eval_expr_if(If* expr, Environment* env, Allocator allocator)
@@ -224,8 +224,8 @@ fn Object eval_expr_index(Object left, Object index, Allocator allocator)
 {
     switch
     {
-        case left.type == object::Array.typeid && index.type == Int32.typeid:
-            return eval_expr_array_index((object::Array*)left, (Int32*)index, allocator);
+        case left.type == object::Array.typeid && index.type == object::Int32.typeid:
+            return eval_expr_array_index((object::Array*)left, (object::Int32*)index, allocator);
         case left.type == object::HashMap.typeid:
             return eval_expr_hash_index((object::HashMap*)left, index, allocator);
         default:

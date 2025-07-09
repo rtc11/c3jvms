@@ -192,7 +192,7 @@ fn void expression_hash_str_keys() @test
 
     hash.pairs.@each(; Expression k, Expression v) {
         StrLiteral* key = (StrLiteral*)k;
-        IntLiteral* value = (IntLiteral*)v;
+        ast::Int32* value = (ast::Int32*)v;
         intlit_eq(value, expected[key.value]!!);
     };
 }
@@ -305,7 +305,7 @@ fn void identifier_eq(Expression expr, String expected)
 
 fn void intlit_eq(Expression expr, int expected)
 {
-    IntLiteral* int_lit= (IntLiteral*) expr;
+    ast::Int32* int_lit= (ast::Int32*) expr;
     test::eq(int_lit.value, expected);
     test::eq(int_lit.token_literal(), string::tformat("%s", expected));
 }

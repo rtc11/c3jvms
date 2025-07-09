@@ -181,7 +181,7 @@ fn Expression Parser.parse_identifier(&self)
 
 fn Expression Parser.parse_int_literal(&self)
 {
-    IntLiteral* ident = allocator::new(self.allocator, IntLiteral, {
+    ast::Int32* ident = allocator::new(self.allocator, ast::Int32, {
         .token = self.cur, 
         .value = self.cur.literal.to_int()!!,
     });

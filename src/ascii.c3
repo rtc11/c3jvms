@@ -44,8 +44,8 @@ fn AsciiNode render(Expression expr) {
     switch (expr.type) {
         case Identifier:
             label = ((Identifier*) expr).value;
-        case IntLiteral:
-            label = string::tformat("%d", ((IntLiteral*) expr).value);
+        case ast::Int32:
+            label = string::tformat("%d", ((ast::Int32*) expr).value);
         case PrefixExpression:
             label = ((PrefixExpression*) expr).operator;
             right_expr = ((PrefixExpression*) expr).right;
