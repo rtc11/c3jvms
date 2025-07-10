@@ -49,6 +49,10 @@ fn Node modify(Node node, Modifier modifier, Environment* env, Allocator alloc)
             LetStatement* expr = (LetStatement*) node;
             expr.value = (Expression) modify(expr.value, modifier, env, alloc);
 
+        case I32Stmt:
+            I32Stmt* expr = (I32Stmt*) node;
+            expr.value = (Int32*) modify(expr.value, modifier, env, alloc);
+
         case Fn:
             Fn* expr = (Fn*) node;
             foreach(i, param: expr.parameters) param = *(Identifier*) modify(&param, modifier, env, alloc);

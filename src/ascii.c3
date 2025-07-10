@@ -9,33 +9,80 @@ import ast;
 const String RESET_COLOR = "\x1b[0m";
 alias Color = int[3];
 
-fn String colorize(String str) {
+fn String colorize(String str)
+{
     Color color = { rand(150)+50, rand(150)+50,rand(150)+50 };
     return string::tformat("\x1b[38;2;%d;%d;%d;m%s%s", color[0], color[1], color[2], str, RESET_COLOR);
 } 
 
-struct AsciiNode {
+struct AsciiNode
+{
     List{String} lines;
     usz width;
     usz height;
     usz mid;
 }
 
-fn void print_expr_stmt(Program p) {
+fn void print_expr_stmt(Program p)
+{
     ExpressionStatement* stmt = (ExpressionStatement*) p.statements[0];
     io::printfn("%s\n%s", p, colorize(from_expr(stmt.expression)));
 }
 
-fn String colorize_red(String str) {
+fn void print_logo(String name = "compiler", String version = "v0.1", bool linebreak = true)
+{
+    String header = colorize_chars(string::tformat("  __ %s", name));
+    String footer = colorize_chars(string::tformat(`       \/ %s`, version));
+    String logo = colorize_chars(string::tformat(
+`_/  |_ ___.__.
+\   __<   |  |
+ |  |  \___  |
+ |__|  / ____|`));
+    io::printfn("%s", header);
+    io::printfn("%s", logo);
+    if (linebreak) {
+        io::printfn("%s", footer);
+    } else {
+        io::printf("%s", footer);
+    }
+}
+
+macro print_err(String message, ...)
+{
+    String e = string::tformat("%s: %s", red("ERROR"), message);
+    io::printfn("%s", e, $vasplat);
+}
+
+fn String colorize_chars(String str)
+{
+    DString out;
+    out.tinit();
+    foreach(ch: str) {
+        Color color = { rand(150)+50, rand(150)+50,rand(150)+50 };
+        out.append(string::tformat("\x1b[38;2;%d;%d;%d;m%c%s", color[0], color[1], color[2], ch, RESET_COLOR));
+    }
+    return out.str_view();
+} 
+
+fn String red(String str)
+{
     return string::tformat("\x1b[38;2;%d;%d;%d;m%s%s", 220, 20, 60, str, RESET_COLOR);
 }
 
-fn String from_expr(Expression expr) {
+fn String colorize_str(String str)
+{
+    Color color = { rand(150)+50, rand(150)+50,rand(150)+50 };
+    return string::tformat("\x1b[38;2;%d;%d;%d;m%s%s", color[0], color[1], color[2], str, RESET_COLOR);
+} 
+
+fn String from_expr(Expression expr)
+{
     AsciiNode node = render(expr);
     return join(node.lines, "\n");
 }
 
-fn AsciiNode render(Expression expr) {
+fn AsciiNode render(Expression expr)
+{
     if (expr == null) return { .width = 7, .height = 1, .mid = 3 };
     String label;
     Expression left_expr = null;
@@ -134,7 +181,8 @@ fn AsciiNode render(Expression expr) {
     };
 }
 
-fn String join(List{String} parts, String delim) {
+fn String join(List{String} parts, String delim)
+{
     if (parts.len() == 0) return "";
     DString res;
     res.tinit();

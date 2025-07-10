@@ -17,38 +17,49 @@ struct Int32 (Object, Hashable)
 {
     int value;
 }
-fn String Int32.inspect(&self) @dynamic => string::tformat("%d", self.value);
 fn String Int32.name(&self) @dynamic => "i32";
+fn String Int32.inspect(&self) @dynamic => string::tformat("%d", self.value);
 fn Hash Int32.hash(&self) @dynamic => { self.name(), self.value };
 
 struct Bool (Object, Hashable)
 {
     bool value;
 }
-fn String Bool.inspect(&self) @dynamic => string::tformat("%s", self.value);
 fn String Bool.name(&self) @dynamic => "bool";
+fn String Bool.inspect(&self) @dynamic => string::tformat("%s", self.value);
 fn Hash Bool.hash(&self) @dynamic => { self.name(), self.value ? 1 : 0 };
 
 struct Null (Object)
 {
     void* value;
 }
-fn String Null.inspect(&self) @dynamic => string::tformat("null");
 fn String Null.name(&self) @dynamic => "null";
+fn String Null.inspect(&self) @dynamic => string::tformat("null");
 
 struct Return (Object)
 {
     Object value;
 }
-fn String Return.inspect(&self) @dynamic => string::tformat("%s", self.value.inspect());
 fn String Return.name(&self) @dynamic => "return";
+fn String Return.inspect(&self) @dynamic => string::tformat("%s", self.value.inspect());
 
 struct Error (Object)
 {
     String message;
+    String file;
+    isz line;
+    String func;
 }
-fn String Error.inspect(&self) @dynamic => string::tformat("%s: %s", ascii::colorize_red("ERROR"), self.message);
 fn String Error.name(&self) @dynamic => "error";
+fn String Error.inspect(&self) @dynamic
+{
+    return string::tformat("%s: %s in %s:%s %s()", 
+       ascii::red("ERROR"),
+       self.message,
+       self.file,
+       self.line,
+       self.func);
+} 
 
 struct Fn (Object)
 {

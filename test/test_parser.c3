@@ -7,11 +7,18 @@ import parser, lexer, ast;
 
 alias StrTuple = String[2];
 
-fn void statement_i32() @test
+fn void statement_let() @test
 {
     LetStatement* stmt = stmt_let("let num = 10;");
     let_eq(stmt, "num", 10);
 }
+
+fn void statement_i32() @test
+{
+    I32Stmt* stmt = stmt_i32("i32 num = 10;");
+    i32_eq(stmt, "num", 10);
+}
+
 
 fn void statement_return() @test
 {
@@ -173,7 +180,7 @@ fn void expression_array() @test
 {
     Array* array = (Array*) expression("[1, 2 * 2, 3 + 3]");
     test::eq(3, array.elements.len());
-    intlit_eq(array.elements[0], 1);
+    i32e_eq(array.elements[0], 1);
     test_expression_infix(array.elements[1], 2, "*", 2);
     test_expression_infix(array.elements[2], 3, "+", 3);
 
@@ -193,7 +200,7 @@ fn void expression_hash_str_keys() @test
     hash.pairs.@each(; Expression k, Expression v) {
         StrLiteral* key = (StrLiteral*)k;
         ast::Int32* value = (ast::Int32*)v;
-        intlit_eq(value, expected[key.value]!!);
+        i32e_eq(value, expected[key.value]!!);
     };
 }
 
@@ -245,9 +252,24 @@ fn LetStatement* stmt_let(String input)
     return (LetStatement*) prog.statements[0];
 }
 
+fn I32Stmt* stmt_i32(String input)
+{
+    Lexer lexer = lexer::new(input);
+    Parser parser = parser::new(lexer, allocator::temp());
+    Program prog = parser.parse_program();
+    return (I32Stmt*) prog.statements[0];
+}
+
 macro let_eq(LetStatement* stmt, String expect_name, expect_expr)
 {
     test::eq(stmt.token_literal(), "let");
+    test::eq(stmt.name.value, expect_name);
+    expr_eq(stmt.value, expect_expr);
+}
+
+macro i32_eq(I32Stmt* stmt, String expect_name, expect_expr)
+{
+    test::eq(stmt.token_literal(), "i32");
     test::eq(stmt.name.value, expect_name);
     expr_eq(stmt.value, expect_expr);
 }
@@ -290,7 +312,7 @@ macro expr_eq(Expression expr, expected)
 {
     $switch $typeof(expected).typeid:
         $case bool: bool_eq(expr, expected);
-        $case int: intlit_eq(expr, expected);
+        $case int: i32e_eq(expr, expected);
         $case String: identifier_eq(expr, expected);
         $default: $error @sprintf("Invalid type %s", $typeof(expected).nameof);
     $endswitch
@@ -303,7 +325,7 @@ fn void identifier_eq(Expression expr, String expected)
     test::eq(ident.token_literal(), expected);
 }
 
-fn void intlit_eq(Expression expr, int expected)
+fn void i32e_eq(Expression expr, int expected)
 {
     ast::Int32* int_lit= (ast::Int32*) expr;
     test::eq(int_lit.value, expected);

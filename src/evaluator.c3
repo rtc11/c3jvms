@@ -9,9 +9,16 @@ const object::Bool TRUE = { .value = true };
 const object::Bool FALSE = { .value = false };
 const object::Null NULL = {};
 
+const DEBUG = false;
+
 faultdef UNKNOWN_NODE;
 
-macro Error* err(String format, ...) => allocator::new(allocator::temp(), Error, { .message = string::tformat(format, $vasplat) });
+macro Error* err(String format, ...) => allocator::new(allocator::temp(), Error, { 
+    .message = string::tformat(format, $vasplat), 
+    .file = $$FILE,
+    .line = $$LINE,
+    .func = $$FUNC,
+});
 
 fn Object eval(Node node, Environment* env, Allocator allocator)
 {
@@ -27,6 +34,13 @@ fn Object eval(Node node, Environment* env, Allocator allocator)
             LetStatement* stmt = (LetStatement*) node;
             Object i = eval(stmt.value, env, allocator);
             if (i.is_err()) return i;
+            env.set(stmt.name.value, i);
+            return i;
+        case I32Stmt:
+            I32Stmt* stmt = (I32Stmt*) node;
+            Object i = eval(stmt.value, env, allocator);
+            if (i.is_err()) return i;
+            if (i.type != object::Int32.typeid) return err("cannot assign value of %s to variable of i32", i.name(), "i32");
             env.set(stmt.name.value, i);
             return i;
         case Identifier:
@@ -150,6 +164,9 @@ fn Object eval_expr_infix_i32(String operator, Object left, Object right, Alloca
 {
     int lval = ((object::Int32*) left).value;
     int rval = ((object::Int32*) right).value;
+
+    if (DEBUG) io::printfn("%s %s %s", lval, operator, rval);
+
     switch (operator)
     {
         case "+": return allocator::new(a, object::Int32, { .value = lval + rval });

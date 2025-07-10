@@ -65,9 +65,9 @@ fn Token Lexer.next(&self)
         case ']': token = { R_BRACKET, "]" };
         case ':':
             switch (self.peek()) {
-                case ':':  
-                    token = { NAMESPACE, "::"};
-                    self.read_char();
+                // case ':':  
+                //     token = { NAMESPACE, "::"};
+                //     self.read_char();
                 default: token = { COLON, ":" };
             }
 
@@ -79,18 +79,19 @@ fn Token Lexer.next(&self)
             }
     }
     switch (token.type) {
-        // case I32: 
-        case IDENTIFIER:
-        case LET: 
-        case INT_LITERAL:
         case FN:
+        case LET: 
         case TRUE:
         case FALSE:
         case RETURN:
         case IF:
         case ELSE:
-        case MACRO:
         case STR_LITERAL:
+        case MACRO:
+        case IDENTIFIER:
+        case INT_LITERAL:
+        case I32: 
+        case STR:
             break; 
         default: self.read_char(); // needed for single-char tokens
     }
@@ -163,16 +164,16 @@ fn Token Lexer.read_identifier(&self)
     switch (identifier)
     {
         case "fn": return {FN, identifier};  
-        // case "i32": return {I32, identifier};  
         case "let": return {LET, identifier};  
         case "true": return {TRUE, identifier};  
         case "false": return {FALSE, identifier};  
         case "return": return {RETURN, identifier};  
-        case "::": return {NAMESPACE, identifier};  
+        // case "::": return {NAMESPACE, identifier};  
         case "if": return {IF, identifier};  
         case "else": return {ELSE, identifier};  
-        case "str": return {STR, identifier};  
         case "macro": return {MACRO, identifier};  
+        case "i32": return {I32, identifier};  
+        case "str": return {STR, identifier};  
         default: return {IDENTIFIER, identifier};
     }
 }
@@ -212,7 +213,7 @@ enum TokenType : (String literal)
     NEQ            = "!=",
 
     LET            = "let", // keyword let
-    // I32            = "i32", // keyword int
+    I32            = "i32", // keyword int
     STR            = "str", // keyword str
 
     STR_LITERAL    = "",    // string literal like "hello"
@@ -223,7 +224,7 @@ enum TokenType : (String literal)
     ELSE           = "else",
     TRUE           = "true",
     FALSE          = "false",
-    NAMESPACE      = "::",
+    // NAMESPACE      = "::",
     RETURN         = "return",
     MACRO          = "macro",
     IDENTIFIER     = "",

@@ -1,5 +1,3 @@
-fn main { 
-    int num = 10;
-    io::printfn("hello"); 
-}
-
+i32 num = 10;
+i32 num2 = 5;
+num + num2 * 2;

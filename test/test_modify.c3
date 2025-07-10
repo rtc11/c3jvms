@@ -21,6 +21,7 @@ fn void node() @test
         { let(one()), let(two()) },
         { fun(one()), fun(two())},
         { array(one(), one()), array(two(), two()) },
+        { i32((Int32*) one()), i32((Int32*)two()) },
     };
     Environment* env = environment::new(allocator::temp());
     foreach(test: cases) {
@@ -146,6 +147,13 @@ fn Node let(Expression value)
     });
 }
 
+fn Node i32(Int32* value)
+{
+    return allocator::new(allocator::temp(), I32Stmt, {
+        .value = value,
+    });
+}
+
 fn Node fun(Expression body)
 {
     return allocator::new(allocator::temp(), Fn, {
@@ -216,6 +224,10 @@ fn void deep_eq(Node expected, Node actual)
         case LetStatement:
             LetStatement* exp = (LetStatement*) expected;
             LetStatement* act = (LetStatement*) actual;
+            deep_eq(exp.value, act.value);
+        case I32Stmt:
+            I32Stmt* exp = (I32Stmt*) expected;
+            I32Stmt* act = (I32Stmt*) actual;
             deep_eq(exp.value, act.value);
         case Fn:
             Fn* exp = (Fn*) expected;

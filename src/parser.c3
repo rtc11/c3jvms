@@ -7,6 +7,7 @@ import std::collections::map;
 import ast;
 import lexer;
 
+const DEBUG = false;
 alias ParsePrefix = fn Expression(Parser*);
 alias ParseInfix = fn Expression(Parser*, Expression);
 
@@ -107,6 +108,9 @@ fn Program Parser.parse_program(&self)
 
     while (self.cur.type != EOF) {
         switch (self.cur.type) {
+            case I32:
+                I32Stmt* stmt = self.parse_i32_stmt();
+                if (stmt != null) stmts.push(stmt);
             case LET: 
                 LetStatement* stmt = self.parse_let_stmt();
                 if (stmt != null) stmts.push(stmt);
@@ -131,6 +135,20 @@ fn LetStatement* Parser.parse_let_stmt(&self)
     self.next_token();
     stmt.value = self.parse_expression(LOWEST);
     if (self.peek_token_is(SEMICOLON)) self.next_token();
+    return stmt;
+}
+
+fn I32Stmt* Parser.parse_i32_stmt(&self)
+{
+    if (DEBUG) io::printfn("parse_i32_stmt");
+    I32Stmt* stmt = allocator::new(self.allocator, I32Stmt, { .token = self.cur });
+    if (!self.expect_peek(IDENTIFIER)) return null;
+    stmt.name = { self.cur, self.cur.literal };
+    if (!self.expect_peek(ASSIGN)) return null;
+    self.next_token();
+    stmt.value = self.parse_expression(LOWEST);
+    if (self.peek_token_is(SEMICOLON)) self.next_token();
+    if (DEBUG) io::printfn("parse_i32_stmt OK");
     return stmt;
 }
 
@@ -181,11 +199,11 @@ fn Expression Parser.parse_identifier(&self)
 
 fn Expression Parser.parse_int_literal(&self)
 {
-    ast::Int32* ident = allocator::new(self.allocator, ast::Int32, {
+    ast::Int32* i32 = allocator::new(self.allocator, ast::Int32, {
         .token = self.cur, 
         .value = self.cur.literal.to_int()!!,
     });
-    return (Expression) ident;
+    return (Expression) i32;
 }
 
 fn Expression Parser.parse_bool(&self)
@@ -210,6 +228,7 @@ fn Expression Parser.parse_prefix_expression(&self)
 
 fn Expression Parser.parse_infix_expression(&self, Expression left_expr)
 {
+    if (DEBUG) io::printfn("parse_call_expression");
     InfixExpression* infix = allocator::new(self.allocator, InfixExpression, {
         .token = self.cur, 
         .operator = self.cur.literal,
@@ -218,6 +237,7 @@ fn Expression Parser.parse_infix_expression(&self, Expression left_expr)
     Presendence pres = self.cur_presendence();
     self.next_token();
     infix.right = self.parse_expression(pres);
+    if (DEBUG) io::printfn("parse_call_expression OK");
     return (Expression) infix;
 }
 
@@ -393,6 +413,9 @@ fn BlockStatement* Parser.parse_block_statement(&self)
     self.next_token();
     while(!self.cur_token_is(R_BRACE) && !self.cur_token_is(EOF)) {
         switch (self.cur.type) {
+            case I32: 
+                I32Stmt* stmt = self.parse_i32_stmt();
+                if (stmt != null) stmts.push(stmt);
             case LET: 
                 LetStatement* stmt = self.parse_let_stmt();
                 if (stmt != null) stmts.push(stmt);

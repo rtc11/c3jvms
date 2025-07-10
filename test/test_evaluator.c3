@@ -3,7 +3,7 @@ module test::evaluator;
 import std::io;
 import std::collections::list;
 import std::collections::map;
-import evaluator, object, ast, parser, lexer, environment;
+import evaluator, object, ast, parser, lexer, environment, ascii;
 
 fn void eval_expression_i32() @test
 {
@@ -89,12 +89,30 @@ fn void eval_stmt_return() @test
     `), 10);
 }
 
-fn void eval_stmt_i32() @test
+fn void eval_stmt_let() @test
 {
     i32_eq(test_eval("let a = 5; a;"), 5);
     i32_eq(test_eval("let a = 5 * 5; a;"), 25);
     i32_eq(test_eval("let a = 5; let b = a; b;"), 5);
     i32_eq(test_eval("let a = 5; let b = a; let c = a + b + 5; c;"), 15);
+}
+
+fn void eval_stmt_i32() @test
+{
+    i32_eq(test_eval("i32 a = 5; a;"), 5);
+    i32_eq(test_eval("i32 a = 5 * 5; a;"), 25);
+    i32_eq(test_eval("i32 a = 5; i32 b = a; b;"), 5);
+    i32_eq(test_eval("i32 a = 5; i32 b = a; i32 c = a + b + 5; c;"), 15);
+    err_eq(test_eval(`i32 a = "hello"; a;`), "cannot assign value of str to variable of i32");
+}
+
+fn void eval_err() @test
+{
+    Error* err = (Error*) test_eval(`i32 a = "hello"; a;`);
+    test::eq(
+        string::tformat("%s%s", ascii::red("ERROR"), 
+            ": cannot assign value of str to variable of i32 in evaluator.c3:43 eval()"),
+        err.inspect());
 }
 
 fn void error_handling() @test
@@ -327,6 +345,7 @@ macro void builtin_eq(Object obj, expected)
 
 fn void str_eq(Object obj, String expected)
 {
+    if (obj.is_err()) err_eq(obj, expected);
     object::Str* res = (object::Str*) obj;
     test::eq(expected, res.value);
 }

@@ -51,6 +51,17 @@ fn usz? LetStatement.to_format(&self, Formatter* f) @dynamic {
     return f.printf("%s %s = %s;", self.token_literal(), self.name, self.value);
 }
 
+struct I32Stmt (Statement)
+{
+    Token token;
+    Identifier name;
+    Expression value;
+}
+fn String I32Stmt.token_literal(&self) @dynamic => self.token.literal;
+fn usz? I32Stmt.to_format(&self, Formatter* f) @dynamic {
+    return f.printf("%s %s = %s;", self.token_literal(), self.name, self.value);
+}
+
 struct ReturnStatement (Statement)
 {
     Token token;

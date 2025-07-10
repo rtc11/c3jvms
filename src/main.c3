@@ -2,33 +2,45 @@ import std::io;
 import std::collections::list;
 import std::collections::anylist;
 import std::net;
-import classfile; 
-import assembler;
-import ast;
-import lexer;
-import parser;
-import ascii;
+import std::time;
+import classfile, assembler; 
+import ast, lexer, parser, ascii, object, evaluator, environment;
 
 fn void main(String[] args)
 {
     @pool() {
         // read_ty(args);
         // read_class(args);
-        read_input();
+        Clock c = clock::now();
+        String output = compile(args)!!;
+        io::printfn(" - %s", c.mark());
+        io::printfn("%s", output);
     };
 }
 
-fn void read_input()
+faultdef COMPILATION_ERROR;
+fn String? compile(String[] args)
 {
-    // Lexer lexer = lexer::new(`fn(x, y) { x + y; }`);
-    Lexer lexer = lexer::new(`5 < 4 != 3 > 4`);
-    Parser parser = parser::new(lexer, allocator::heap());
+    ascii::print_logo(linebreak: false);
+    if (args.len != 2) {
+        ascii::print_err("compiler require a file to compile, e.g. 'ty main.ty'");
+        return COMPILATION_ERROR?;
+    }
+    String filename = args[1];
+    char[] input = file::load_temp(filename)!!;
+    Lexer lexer = lexer::new(input);
+    Environment* env = environment::new(allocator::temp());
+    Parser parser = parser::new(lexer, allocator::temp());
     Program prog = parser.parse_program();
-    io::printfn("%s", prog);
-    ExpressionStatement* stmt = (ExpressionStatement*) prog.statements[0];
-    ascii::print_expr_stmt(prog);
+    if (parser.errors.len() != 0) {
+        foreach (err: parser.errors) {
+            io::printfn("\t%s", ascii::red(string::tformat("%s", err)));
+        }
+    }
+    Object evaluated = evaluator::eval(&prog, env, allocator::temp());
+    return string::tformat("%s", ascii::colorize_str(string::tformat("%s", evaluated.inspect())));
+    // io::printfn("%s", ascii::colorize_str(string::tformat("%s", evaluated.inspect())));
 }
-
 
 fn void read_ty(String[] args)
 {
