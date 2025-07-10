@@ -252,3 +252,15 @@ fn usz? Macro.to_format(&self, Formatter* f) @dynamic {
     foreach(i, p: self.parameters) params[i] = string::tformat("%s", p);
     return f.printf("%s(%s)%s", self.token_literal(), string::join(allocator::temp(), params, ", "), self.body);
 }
+
+struct Dot (Expression)
+{
+    Token token;
+    Expression left;
+    Identifier name;
+}
+fn String Dot.token_literal(&self) @dynamic => self.token.literal;
+fn usz? Dot.to_format(&self, Formatter* f) @dynamic {
+    return f.printf("(%s.%s)", self.left, self.name);
+}
+

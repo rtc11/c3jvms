@@ -74,6 +74,15 @@ fn void expression_if_else() @test
     identifier_eq(alt.expression, "y");
 }
 
+fn void expression_dot() @test
+{
+    Call* call = (Call*) expression(`"foo".len()`);
+    Dot* dot = (Dot*) call.function;
+    identifier_eq(&dot.name, "len");
+    StrLiteral* lit = (StrLiteral*) dot.left;
+    test::eq("foo", lit.value);
+}
+
 fn void expression_fn0() @test
 {
     Fn* expr = (Fn*) expression(`fn () {}`);

@@ -34,11 +34,11 @@ fn String? compile(String[] args)
     Program prog = parser.parse_program();
     if (parser.errors.len() != 0) {
         foreach (err: parser.errors) {
-            io::printfn("\t%s", ascii::red(string::tformat("%s", err)));
+            io::printfn("\t%s", ascii::colorize(RED, string::tformat("%s", err)));
         }
     }
     Object evaluated = evaluator::eval(&prog, env, allocator::temp());
-    return string::tformat("%s", ascii::colorize_str(string::tformat("%s", evaluated.inspect())));
+    return string::tformat("%s", ascii::randomize(string::tformat("%s", evaluated.inspect())));
     // io::printfn("%s", ascii::colorize_str(string::tformat("%s", evaluated.inspect())));
 }
 

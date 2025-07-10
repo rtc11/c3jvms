@@ -37,6 +37,7 @@ fn Token Lexer.next(&self)
         case ')': token = { R_PAREN, ")" };
         case ';': token = { SEMICOLON, ";" };
         case ',': token = { COMMA, "," };
+        case '.': token = { DOT, "." };
         case '!': 
             switch(self.peek()) {
                 case '=':
@@ -199,6 +200,7 @@ enum TokenType : (String literal)
     SEMICOLON      = ";",
     COLON          = ":",
     COMMA          = ",",
+    DOT            = ".",
 
     MINUS          = "-",   // prefix/infix operator
     PLUS           = "+",   // infix operator

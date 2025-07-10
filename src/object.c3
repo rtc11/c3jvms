@@ -53,11 +53,11 @@ struct Error (Object)
 fn String Error.name(&self) @dynamic => "error";
 fn String Error.inspect(&self) @dynamic
 {
-    return string::tformat("%s: %s in %s:%s %s()", 
-       ascii::red("ERROR"),
-       self.message,
+    return string::tformat("%s:%s %s: %s (in %s)", 
        self.file,
-       self.line,
+       ascii::colorize(PINK, self.line),
+       ascii::colorize(RED, "ERROR"),
+       self.message,
        self.func);
 } 
 
@@ -85,7 +85,7 @@ fn String Str.name(&self) @dynamic => "str";
 fn String Str.inspect(&self) @dynamic => self.value;
 fn Hash Str.hash(&self) @dynamic => { self.name(), self.value.hash() };
 
-alias BuiltinFn = fn Object(List{Object});
+alias BuiltinFn = fn Object(List{Object}, Allocator);
 
 struct Builtin (Object)
 {

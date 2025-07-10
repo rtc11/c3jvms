@@ -42,6 +42,7 @@ fn Parser new(Lexer lexer, Allocator allocator)
     presendences[MINUS] = SUM;
     presendences[SLASH] = PRODUCT;
     presendences[ASTERISK] = PRODUCT;
+    presendences[DOT] = DOT;
     presendences[L_PAREN] = CALL;
     presendences[L_BRACKET] = INDEX;
 
@@ -81,6 +82,7 @@ fn Parser new(Lexer lexer, Allocator allocator)
     p.register_infix(GT, (ParseInfix)&Parser.parse_infix_expression);
     p.register_infix(L_PAREN, (ParseInfix)&Parser.parse_call_expression);
     p.register_infix(L_BRACKET, (ParseInfix)&Parser.parse_index_expression);
+    p.register_infix(DOT, (ParseInfix)&Parser.parse_dot_expression);
 
     return p;
 }
@@ -228,7 +230,7 @@ fn Expression Parser.parse_prefix_expression(&self)
 
 fn Expression Parser.parse_infix_expression(&self, Expression left_expr)
 {
-    if (DEBUG) io::printfn("parse_call_expression");
+    if (DEBUG) io::printfn("parse_infix_expression");
     InfixExpression* infix = allocator::new(self.allocator, InfixExpression, {
         .token = self.cur, 
         .operator = self.cur.literal,
@@ -237,7 +239,7 @@ fn Expression Parser.parse_infix_expression(&self, Expression left_expr)
     Presendence pres = self.cur_presendence();
     self.next_token();
     infix.right = self.parse_expression(pres);
-    if (DEBUG) io::printfn("parse_call_expression OK");
+    if (DEBUG) io::printfn("parse_infix_expression OK");
     return (Expression) infix;
 }
 
@@ -258,6 +260,14 @@ fn Expression Parser.parse_index_expression(&self, Expression left)
     index.index = self.parse_expression(LOWEST);
     if (!self.expect_peek(R_BRACKET)) return null;
     return (Expression) index;
+}
+
+fn Expression Parser.parse_dot_expression(&self, Expression left)
+{
+    Dot* dot = allocator::new(self.allocator, Dot, { .token = self.cur, .left = left });
+    if(!self.expect_peek(IDENTIFIER)) return null;
+    dot.name = { self.cur, self.cur.literal };
+    return (Expression) dot;
 }
 
 fn Expression Parser.parse_grouped_expression(&self)
@@ -386,18 +396,12 @@ fn List{Identifier} Parser.parse_fn_parameters(&self)
 
     self.next_token();
 
-    idents.push(*allocator::new(self.allocator, Identifier, {
-        .token = self.cur,
-        .value = self.cur.literal,
-    }));
+    idents.push(*(Identifier*) self.parse_identifier());
 
     while (self.peek_token_is(COMMA)) {
         self.next_token();
         self.next_token();
-        idents.push(*allocator::new(self.allocator, Identifier, {
-            .token = self.cur,
-            .value = self.cur.literal,
-        }));
+        idents.push(*(Identifier*) self.parse_identifier());
     }
 
     if (!self.expect_peek(R_PAREN)) return {};
@@ -477,6 +481,7 @@ enum Presendence {
     SUM,          // +
     PRODUCT,      // *
     PREFIX,       // -X or !X
+    DOT,
     CALL,         // myFunction(X)
     INDEX,        // array[index]
 }

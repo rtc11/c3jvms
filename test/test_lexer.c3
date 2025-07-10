@@ -32,6 +32,8 @@ fn void next_token() @test
         macro(x, y) { x + y; };
 
         i32 num = 100;
+
+        num.len();
     `);
 
     token_eq(lexer.next(), { LET, "let"});
@@ -143,6 +145,13 @@ fn void next_token() @test
     token_eq(lexer.next(), { IDENTIFIER, "num"});
     token_eq(lexer.next(), { ASSIGN, "="});
     token_eq(lexer.next(), { INT_LITERAL, "100"});
+    token_eq(lexer.next(), { SEMICOLON, ";"});
+
+    token_eq(lexer.next(), { IDENTIFIER, "num"});
+    token_eq(lexer.next(), { DOT, "."});
+    token_eq(lexer.next(), { IDENTIFIER, "len"});
+    token_eq(lexer.next(), { L_PAREN, "("});
+    token_eq(lexer.next(), { R_PAREN, ")"});
     token_eq(lexer.next(), { SEMICOLON, ";"});
 
     token_eq(lexer.next(), { EOF, ""});

@@ -106,15 +106,6 @@ fn void eval_stmt_i32() @test
     err_eq(test_eval(`i32 a = "hello"; a;`), "cannot assign value of str to variable of i32");
 }
 
-fn void eval_err() @test
-{
-    Error* err = (Error*) test_eval(`i32 a = "hello"; a;`);
-    test::eq(
-        string::tformat("%s%s", ascii::red("ERROR"), 
-            ": cannot assign value of str to variable of i32 in evaluator.c3:43 eval()"),
-        err.inspect());
-}
-
 fn void error_handling() @test
 {
     err_eq(test_eval("5 + true;"), "type mismatch: i32 + bool");
@@ -131,7 +122,7 @@ fn void error_handling() @test
             return 1;
         }
     `), "unknown operator: bool + bool");
-    err_eq(test_eval("foobar"), "identifier not found: foobar");
+    err_eq(test_eval("foobar"), string::tformat("unknown identifier %s", ascii::str("foobar")));
     err_eq(test_eval(`"Hello" - "World"`), "unknown operator: str - str");
     err_eq(test_eval(`{"name": "Monkey"}[fn(x) { x }]`), "unusable as hash key: fn");
 }
@@ -178,40 +169,40 @@ fn void str_concat() @test
 
 fn void builtin_fn() @test
 {
-    builtin_eq(test_eval(`len("")`), 0);
-    builtin_eq(test_eval(`len("abc")`), 3);
-    builtin_eq(test_eval(`first([1, 2, 3])`), 1);
-    builtin_eq(test_eval(`let a = [4,5,6]; first(a);`), 4);
-    builtin_eq(test_eval(`last([1, 2, 3])`), 3);
-    builtin_eq(test_eval(`let a = [4,5,6]; last(a);`), 6);
+    builtin_eq(test_eval(`"".len()`), 0);
+    builtin_eq(test_eval(`"abc".len()`), 3);
+    builtin_eq(test_eval(`[1, 2, 3].first()`), 1);
+    builtin_eq(test_eval(`let a = [4,5,6]; a.first();`), 4);
+    builtin_eq(test_eval(`[1, 2, 3].last()`), 3);
+    builtin_eq(test_eval(`let a = [4,5,6]; a.last();`), 6);
 }
 
 fn void builtin_slice() @test
 {
-    builtin_array_eq(test_eval(`slice([1, 2, 3, 4, 5], 0, 0)`), 1);
-    builtin_array_eq(test_eval(`slice([1, 2, 3, 4, 5], 1, 1)`), 2);
-    builtin_array_eq(test_eval(`slice([1, 2, 3, 4, 5], 2, 2)`), 3);
-    builtin_array_eq(test_eval(`slice([1, 2, 3, 4, 5], 0, 4)`), 1, 2, 3, 4, 5);
-    builtin_array_eq(test_eval(`slice([1, 2, 3, 4, 5], 1, 3)`), 2, 3, 4);
-    builtin_array_eq(test_eval(`slice([1, 2, 3, 4, 5], 2, 3)`), 3, 4);
-    builtin_array_eq(test_eval(`slice([1, 2, 3, 4, 5], 2, 4)`), 3, 4, 5);
-    builtin_array_eq(test_eval(`slice([1, 2, 3, 4, 5], 2, 5)`), 3, 4, 5);
-    builtin_array_eq(test_eval(`slice([1, 2, 3, 4, 5], 2, 6)`), 3, 4, 5);
-    builtin_array_eq(test_eval(`slice([1, 2, 3, 4, 5], -2, 2)`), 1, 2, 3);
+    builtin_array_eq(test_eval(`[1, 2, 3, 4, 5].slice(0, 0)`), 1);
+    builtin_array_eq(test_eval(`[1, 2, 3, 4, 5].slice(1, 1)`), 2);
+    builtin_array_eq(test_eval(`[1, 2, 3, 4, 5].slice(2, 2)`), 3);
+    builtin_array_eq(test_eval(`[1, 2, 3, 4, 5].slice(0, 4)`), 1, 2, 3, 4, 5);
+    builtin_array_eq(test_eval(`[1, 2, 3, 4, 5].slice(1, 3)`), 2, 3, 4);
+    builtin_array_eq(test_eval(`[1, 2, 3, 4, 5].slice(2, 3)`), 3, 4);
+    builtin_array_eq(test_eval(`[1, 2, 3, 4, 5].slice(2, 4)`), 3, 4, 5);
+    builtin_array_eq(test_eval(`[1, 2, 3, 4, 5].slice(2, 5)`), 3, 4, 5);
+    builtin_array_eq(test_eval(`[1, 2, 3, 4, 5].slice(2, 6)`), 3, 4, 5);
+    builtin_array_eq(test_eval(`[1, 2, 3, 4, 5].slice(-2, 2)`), 1, 2, 3);
 }
 
 fn void builtin_rest() @test
 {
-    builtin_array_eq(test_eval(`rest([1, 2, 3])`), 2, 3 );
-    builtin_array_eq(test_eval(`rest(rest([1, 2, 3]))`), 3 );
-    builtin_array_eq(test_eval(`rest(rest(rest([1, 2, 3])))`));
-    null_eq(test_eval(`rest(rest(rest(rest([1, 2, 3]))))`));
+    builtin_array_eq(test_eval(`[1, 2, 3].rest()`), 2, 3 );
+    builtin_array_eq(test_eval(`[1, 2, 3].rest().rest()`), 3 );
+    builtin_array_eq(test_eval(`[1, 2, 3].rest().rest().rest()`));
+    null_eq(test_eval(`[1, 2, 3].rest().rest().rest().rest()`));
 }
 
 fn void builtin_push() @test
 {
-    builtin_array_eq(test_eval(`let a = [1]; push(a, 2);`), 1, 2);
-    builtin_array_eq(test_eval(`let a = []; push(a, 1);`), 1);
+    builtin_array_eq(test_eval(`let a = [1]; a.push(2);`), 1, 2);
+    builtin_array_eq(test_eval(`let a = []; a.push(1);`), 1);
 }
 
 // TODO: move to stdlib
@@ -220,10 +211,10 @@ fn void map() @test
     builtin_array_eq(test_eval(`
         let map = fn(arr, f) {
             let iter = fn(arr, acc) {
-                if (len(arr) == 0) {
+                if (arr.len() == 0) {
                     acc
                 } else {
-                    iter(rest(arr), push(acc, f(first(arr))));
+                    iter(arr.rest(), acc.push(f(arr.first())));
                 }
             };
             iter(arr, []);
@@ -240,10 +231,10 @@ fn void reduce() @test
     i32_eq(test_eval(`
         let reduce = fn(arr, init, f) {
             let iter = fn(arr, acc) {
-                if (len(arr) == 0) {
+                if (arr.len() == 0) {
                     acc
                 } else {
-                    iter(rest(arr), f(acc, first(arr)));
+                    iter(arr.rest(), f(acc, arr.first()));
                 }
             };
             iter(arr, init);
@@ -317,6 +308,7 @@ fn void hash_index() @test
 
 macro builtin_array_eq(Object obj, ...)
 {
+    if (obj.is_err()) io::printfn("%s", obj.inspect());
     object::Array* array = (object::Array*) obj;
     int[*] expected = { $vasplat, 0 };
     if (expected.len == 1) return;
@@ -337,6 +329,7 @@ macro void eq(Object obj, expected)
 
 macro void builtin_eq(Object obj, expected)
 {
+    if (obj.is_err()) io::printfn("%s", obj.inspect());
     $switch $typeof(expected).typeid:
         $case int: i32_eq(obj, expected);
         $case String: err_eq(obj, expected);
@@ -350,8 +343,8 @@ fn void str_eq(Object obj, String expected)
     test::eq(expected, res.value);
 }
 
-fn void err_eq(Object obj, String err_msg
-               ){
+fn void err_eq(Object obj, String err_msg)
+{
     Error* err_obj = (Error*) obj;
     test::eq(err_msg, err_obj.message);
 }
@@ -366,6 +359,7 @@ macro if_else_eq(Object obj, expected)
 
 fn void null_eq(Object obj)
 {
+    if (obj.is_err()) io::printfn("%s", obj.inspect());
     test::eq(obj.type, Null.typeid);
 }
 
@@ -380,12 +374,14 @@ fn Object test_eval(String input)
 
 fn void i32_eq(Object obj, int expected)
 {
+    if (obj.is_err()) io::printfn("%s", obj.inspect());
     object::Int32* res = (object::Int32*) obj;
     test::eq(expected, res.value);
 }
 
 fn void bool_eq(Object obj, bool expected)
 {
+    if (obj.is_err()) io::printfn("%s", obj.inspect());
     object::Bool* res = (object::Bool*) obj;
     test::eq(expected, res.value);
 }

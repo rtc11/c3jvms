@@ -7,12 +7,10 @@ import std::math::random;
 import ast;
 
 const String RESET_COLOR = "\x1b[0m";
-alias Color = int[3];
 
-fn String colorize(String str)
+fn String randomize(String str)
 {
-    Color color = { rand(150)+50, rand(150)+50,rand(150)+50 };
-    return string::tformat("\x1b[38;2;%d;%d;%d;m%s%s", color[0], color[1], color[2], str, RESET_COLOR);
+    return string::tformat("\x1b[38;2;%d;%d;%d;m%s%s", rand(150)+50, rand(150)+50, rand(150)+50, str, RESET_COLOR);
 } 
 
 struct AsciiNode
@@ -26,7 +24,7 @@ struct AsciiNode
 fn void print_expr_stmt(Program p)
 {
     ExpressionStatement* stmt = (ExpressionStatement*) p.statements[0];
-    io::printfn("%s\n%s", p, colorize(from_expr(stmt.expression)));
+    io::printfn("%s\n%s", p, randomize(from_expr(stmt.expression)));
 }
 
 fn void print_logo(String name = "compiler", String version = "v0.1", bool linebreak = true)
@@ -49,7 +47,7 @@ fn void print_logo(String name = "compiler", String version = "v0.1", bool lineb
 
 macro print_err(String message, ...)
 {
-    String e = string::tformat("%s: %s", red("ERROR"), message);
+    String e = string::tformat("%s: %s", colorize(RED, "ERROR"), message);
     io::printfn("%s", e, $vasplat);
 }
 
@@ -58,22 +56,27 @@ fn String colorize_chars(String str)
     DString out;
     out.tinit();
     foreach(ch: str) {
-        Color color = { rand(150)+50, rand(150)+50,rand(150)+50 };
-        out.append(string::tformat("\x1b[38;2;%d;%d;%d;m%c%s", color[0], color[1], color[2], ch, RESET_COLOR));
+        out.append(string::tformat("\x1b[38;2;%d;%d;%d;m%c%s", rand(150)+50, rand(150)+50, rand(150)+50, ch, RESET_COLOR));
     }
     return out.str_view();
 } 
 
-fn String red(String str)
+enum Color : (int r, int g, int b) {
+    RED         = {180,  50,  70},   // #B43246 - Error
+    ORANGE      = {220, 120,  40},   // #DC7828 - Warning
+    GREEN       = { 80, 170,  80},   // #50AA50 - Success
+    BLUE        = { 70, 130, 200},   // #4682C8 - Info
+    GRAY        = {128, 128, 128},   // #808080 - Debug
+    GOLD        = {200, 180,  60},   // #C8B43C - Prompt/Accent
+    PURPLE      = {120,  60, 180},   // #783CB4 - Keyword
+    PINK        = {255, 105, 180},   // #FF69B4 - File Path
+}
+macro colorize(Color color, input)
 {
-    return string::tformat("\x1b[38;2;%d;%d;%d;m%s%s", 220, 20, 60, str, RESET_COLOR);
+    return string::tformat("\x1b[38;2;%d;%d;%d;m%s%s", color.r, color.g, color.b, input, RESET_COLOR);
 }
 
-fn String colorize_str(String str)
-{
-    Color color = { rand(150)+50, rand(150)+50,rand(150)+50 };
-    return string::tformat("\x1b[38;2;%d;%d;%d;m%s%s", color[0], color[1], color[2], str, RESET_COLOR);
-} 
+macro str(input, Color c = GREEN) => string::tformat("\x1b[38;2;%d;%d;%d;m'%s'%s", c.r, c.g, c.b, input, RESET_COLOR);
 
 fn String from_expr(Expression expr)
 {
@@ -186,10 +189,10 @@ fn String join(List{String} parts, String delim)
     if (parts.len() == 0) return "";
     DString res;
     res.tinit();
-    res.append(colorize(parts[0]));
+    res.append(randomize(parts[0]));
     for (int i = 1; i < parts.len(); i++) {
         res.append(delim);
-        res.append(colorize(parts[i]));
+        res.append(randomize(parts[i]));
     }
     return res.str_view();
 }
