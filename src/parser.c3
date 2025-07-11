@@ -113,6 +113,9 @@ fn Program Parser.parse_program(&self)
             case I32:
                 I32Stmt* stmt = self.parse_i32_stmt();
                 if (stmt != null) stmts.push(stmt);
+            case STR:
+                StrStmt* stmt = self.parse_str_stmt();
+                if (stmt != null) stmts.push(stmt);
             case LET: 
                 LetStatement* stmt = self.parse_let_stmt();
                 if (stmt != null) stmts.push(stmt);
@@ -130,6 +133,7 @@ fn Program Parser.parse_program(&self)
 
 fn LetStatement* Parser.parse_let_stmt(&self)
 {
+    if (DEBUG) io::printfn("parse_let_stmt");
     LetStatement* stmt = allocator::new(self.allocator, LetStatement, { .token = self.cur });
     if (!self.expect_peek(IDENTIFIER)) return null;
     stmt.name = { self.cur, self.cur.literal };
@@ -137,6 +141,7 @@ fn LetStatement* Parser.parse_let_stmt(&self)
     self.next_token();
     stmt.value = self.parse_expression(LOWEST);
     if (self.peek_token_is(SEMICOLON)) self.next_token();
+    if (DEBUG) io::printfn("parse_let_stmt OK");
     return stmt;
 }
 
@@ -151,6 +156,20 @@ fn I32Stmt* Parser.parse_i32_stmt(&self)
     stmt.value = self.parse_expression(LOWEST);
     if (self.peek_token_is(SEMICOLON)) self.next_token();
     if (DEBUG) io::printfn("parse_i32_stmt OK");
+    return stmt;
+}
+
+fn StrStmt* Parser.parse_str_stmt(&self)
+{
+    if (DEBUG) io::printfn("parse_str_stmt");
+    StrStmt* stmt = allocator::new(self.allocator, StrStmt, { .token = self.cur });
+    if (!self.expect_peek(IDENTIFIER)) return null;
+    stmt.name = { self.cur, self.cur.literal };
+    if (!self.expect_peek(ASSIGN)) return null;
+    self.next_token();
+    stmt.value = self.parse_expression(LOWEST);
+    if (self.peek_token_is(SEMICOLON)) self.next_token();
+    if (DEBUG) io::printfn("parse_str_stmt OK");
     return stmt;
 }
 
@@ -419,6 +438,9 @@ fn BlockStatement* Parser.parse_block_statement(&self)
         switch (self.cur.type) {
             case I32: 
                 I32Stmt* stmt = self.parse_i32_stmt();
+                if (stmt != null) stmts.push(stmt);
+            case STR: 
+                StrStmt* stmt = self.parse_str_stmt();
                 if (stmt != null) stmts.push(stmt);
             case LET: 
                 LetStatement* stmt = self.parse_let_stmt();
