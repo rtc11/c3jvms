@@ -9,8 +9,9 @@ fn void define() @test
         let number = 1;
         let function = fn(x, y) { x + y };
         let mymacro = macro(x, y) { x + y };
+        i32 mymacro = macro(x, y) { x + y };
+        str mymacro = macro(x, y) { x + y };
     `);
-        // i32 mymacro = macro(x, y) { x + y };
 
     evaluator::define_macro(&prog, env, allocator::temp());
 
