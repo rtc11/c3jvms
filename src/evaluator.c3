@@ -40,7 +40,14 @@ fn Object eval(Node node, Environment* env, Allocator alloc)
             I32Stmt* stmt = (I32Stmt*) node;
             Object i = eval(stmt.value, env, alloc);
             if (i.is_err()) return i;
-            if (i.type != object::Int32.typeid) return err("cannot assign value of %s to variable of i32", i.name(), "i32");
+            if (i.type != object::Int32.typeid) return err("cannot assign value of %s to variable of %s", ascii::colorize(GOLD, i.name()), ascii::colorize(GOLD, "i32"));
+            env.set(stmt.name.value, i);
+            return i;
+        case StrStmt:
+            StrStmt* stmt = (StrStmt*) node;
+            Object i = eval(stmt.value, env, alloc);
+            if (i.is_err()) return i;
+            if (i.type != object::Str.typeid) return err("cannot assign value of %s to variable of %s", ascii::colorize(GOLD, i.name()), ascii::colorize(GOLD, "str"));
             env.set(stmt.name.value, i);
             return i;
         case Identifier:
@@ -96,7 +103,7 @@ fn Object eval(Node node, Environment* env, Allocator alloc)
             return eval_hashmap((ast::HashMap*) node, env, alloc);
         // case ast::Dot: atm only function calls is dotted, see ast::Call
         default: 
-            return err("ERROR: Unknown node %s", node);
+            return err("Unknown node %s", node);
     }
 }
 

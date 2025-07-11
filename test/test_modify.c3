@@ -22,6 +22,8 @@ fn void node() @test
         { fun(one()), fun(two())},
         { array(one(), one()), array(two(), two()) },
         { i32((Int32*) one()), i32((Int32*)two()) },
+        { stra(), strb() },
+        { str(stra()), str(strb()) },
     };
     Environment* env = environment::new(allocator::temp());
     foreach(test: cases) {
@@ -55,6 +57,8 @@ fn void hash() @test
 
 fn Expression one() => allocator::new(allocator::temp(), ast::Int32, { .value = 1 });
 fn Expression two() => allocator::new(allocator::temp(), ast::Int32, { .value = 2 });
+fn StrLiteral* stra() => allocator::new(allocator::temp(), ast::StrLiteral, { .value = "a" });
+fn StrLiteral* strb() => allocator::new(allocator::temp(), ast::StrLiteral, { .value = "b" });
 
 fn Node turn_one_into_two(Node node, Environment* env, Allocator alloc)
 {
@@ -64,6 +68,11 @@ fn Node turn_one_into_two(Node node, Environment* env, Allocator alloc)
             if (integer.value != 1) return node;
             integer.value = 2;
             return integer;
+        case ast::StrLiteral:  
+            ast::StrLiteral* str = (ast::StrLiteral*) node;
+            if (str.value != "a") return node;
+            str.value = "b";
+            return str;
         default: 
             return node;
     }
@@ -154,6 +163,13 @@ fn Node i32(Int32* value)
     });
 }
 
+fn Node str(StrLiteral* value)
+{
+    return allocator::new(allocator::temp(), StrStmt, {
+        .value = value,
+    });
+}
+
 fn Node fun(Expression body)
 {
     return allocator::new(allocator::temp(), Fn, {
@@ -189,6 +205,10 @@ fn void deep_eq(Node expected, Node actual)
         case ast::Int32:
             ast::Int32* exp = (ast::Int32*) expected;
             ast::Int32* act = (ast::Int32*) actual;
+            test::eq(exp.value, act.value);
+        case ast::StrLiteral:
+            ast::StrLiteral* exp = (ast::StrLiteral*) expected;
+            ast::StrLiteral* act = (ast::StrLiteral*) actual;
             test::eq(exp.value, act.value);
         case InfixExpression:
             InfixExpression* exp = (InfixExpression*) expected;
@@ -228,6 +248,10 @@ fn void deep_eq(Node expected, Node actual)
         case I32Stmt:
             I32Stmt* exp = (I32Stmt*) expected;
             I32Stmt* act = (I32Stmt*) actual;
+            deep_eq(exp.value, act.value);
+        case StrStmt:
+            StrStmt* exp = (StrStmt*) expected;
+            StrStmt* act = (StrStmt*) actual;
             deep_eq(exp.value, act.value);
         case Fn:
             Fn* exp = (Fn*) expected;

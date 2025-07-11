@@ -44,6 +44,12 @@ fn Node convert_object_to_ast_node(Object obj, Allocator alloc)
                 .token = { INT_LITERAL, string::tformat("%d", i32.value) },
                 .value = i32.value,
             });
+        case object::Str:
+            object::Str* str = (object::Str*) obj;
+            return allocator::new(alloc, ast::StrLiteral, {
+                .token = { STR_LITERAL, string::tformat("%s", str.value) },
+                .value = str.value,
+            });
         case object::Bool:
             object::Bool* b = (object::Bool*) obj;
             return allocator::new(alloc, ast::Bool, {

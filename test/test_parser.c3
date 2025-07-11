@@ -19,6 +19,11 @@ fn void statement_i32() @test
     i32_eq(stmt, "num", 10);
 }
 
+fn void statement_str() @test
+{
+    StrStmt* stmt = stmt_str(`str name = "foobar";`);
+    str_eq(stmt, "name", "foobar");
+}
 
 fn void statement_return() @test
 {
@@ -269,6 +274,14 @@ fn I32Stmt* stmt_i32(String input)
     return (I32Stmt*) prog.statements[0];
 }
 
+fn StrStmt* stmt_str(String input)
+{
+    Lexer lexer = lexer::new(input);
+    Parser parser = parser::new(lexer, allocator::temp());
+    Program prog = parser.parse_program();
+    return (StrStmt*) prog.statements[0];
+}
+
 macro let_eq(LetStatement* stmt, String expect_name, expect_expr)
 {
     test::eq(stmt.token_literal(), "let");
@@ -279,6 +292,13 @@ macro let_eq(LetStatement* stmt, String expect_name, expect_expr)
 macro i32_eq(I32Stmt* stmt, String expect_name, expect_expr)
 {
     test::eq(stmt.token_literal(), "i32");
+    test::eq(stmt.name.value, expect_name);
+    expr_eq(stmt.value, expect_expr);
+}
+
+macro str_eq(StrStmt* stmt, String expect_name, expect_expr)
+{
+    test::eq(stmt.token_literal(), "str");
     test::eq(stmt.name.value, expect_name);
     expr_eq(stmt.value, expect_expr);
 }

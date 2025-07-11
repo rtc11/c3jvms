@@ -19,6 +19,8 @@ fn void quote() @test
     quote_eq(test_eval("quote(unquote(true == false))"), "false");
     quote_eq(test_eval("quote(unquote(quote(4 + 4)))"), "(4 + 4)");
     quote_eq(test_eval(`let quotedInfixExpr = quote(4 + 4); quote(unquote(4 + 4) + unquote(quotedInfixExpr))`), "(8 + (4 + 4))");
+    quote_eq(test_eval("i32 foobar = 8; quote(foobar)"), "foobar");
+    quote_eq(test_eval(`str foobar = "8"; quote(unquote(foobar))`), "8");
 }
 
 macro quote_eq(Object obj, expected)

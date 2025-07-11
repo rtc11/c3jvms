@@ -103,7 +103,16 @@ fn void eval_stmt_i32() @test
     i32_eq(test_eval("i32 a = 5 * 5; a;"), 25);
     i32_eq(test_eval("i32 a = 5; i32 b = a; b;"), 5);
     i32_eq(test_eval("i32 a = 5; i32 b = a; i32 c = a + b + 5; c;"), 15);
-    err_eq(test_eval(`i32 a = "hello"; a;`), "cannot assign value of str to variable of i32");
+    err_eq(test_eval(`i32 a = "hello"; a;`), string::tformat("cannot assign value of %s to variable of %s", ascii::colorize(GOLD, "str"), ascii::colorize(GOLD, "i32")));
+}
+
+fn void eval_stmt_str() @test
+{
+    str_eq(test_eval(`str a = "5"; a;`), "5");
+    str_eq(test_eval(`str a = "5" + "6"; a;`), "56");
+    str_eq(test_eval(`str a = "5"; str b = a; b;`), "5");
+    str_eq(test_eval(`str a = "5"; str b = a; str c = a + b + "5"; c;`), "555");
+    err_eq(test_eval(`str a = 5; a;`), string::tformat("cannot assign value of %s to variable of %s", ascii::colorize(GOLD, "i32"), ascii::colorize(GOLD, "str")));
 }
 
 fn void error_handling() @test

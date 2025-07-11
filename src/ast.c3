@@ -191,6 +191,17 @@ fn usz? Call.to_format(&self, Formatter* f) @dynamic {
     return out;
 }
 
+struct StrStmt (Statement)
+{
+    Token token;
+    Identifier name;
+    Expression value;
+}
+fn String StrStmt.token_literal(&self) @dynamic => self.token.literal;
+fn usz? StrStmt.to_format(&self, Formatter* f) @dynamic {
+    return f.printf("%s %s = %s;", self.token_literal(), self.name, self.value);
+}
+
 struct StrLiteral (Expression)
 {
     Token token;
