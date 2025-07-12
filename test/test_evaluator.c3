@@ -95,6 +95,7 @@ fn void eval_stmt_let() @test
     i32_eq(test_eval("let a = 5 * 5; a;"), 25);
     i32_eq(test_eval("let a = 5; let b = a; b;"), 5);
     i32_eq(test_eval("let a = 5; let b = a; let c = a + b + 5; c;"), 15);
+    i32_eq(test_eval("let a;"), 0);
 }
 
 fn void eval_stmt_i32() @test
