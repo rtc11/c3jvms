@@ -137,10 +137,19 @@ fn LetStatement* Parser.parse_let_stmt(&self)
     LetStatement* stmt = allocator::new(self.allocator, LetStatement, { .token = self.cur });
     if (!self.expect_peek(IDENTIFIER)) return null;
     stmt.name = { self.cur, self.cur.literal };
-    if (!self.expect_peek(ASSIGN)) return null;
-    self.next_token();
-    stmt.value = self.parse_expression(LOWEST);
-    if (self.peek_token_is(SEMICOLON)) self.next_token();
+    switch (self.peek.type) {
+        case ASSIGN:
+            self.next_token(); // consume =
+            self.next_token(); // advance to expression
+            stmt.value = self.parse_expression(LOWEST);
+            if (self.peek_token_is(SEMICOLON)) self.next_token();
+        case SEMICOLON:
+            self.next_token(); // consume ;
+        default:
+            self.peek_error(ASSIGN);
+            self.peek_error(SEMICOLON);
+            return null;
+    }
     if (DEBUG) io::printfn("parse_let_stmt OK");
     return stmt;
 }

@@ -32,8 +32,13 @@ fn Object eval(Node node, Environment* env, Allocator alloc)
             return allocator::new(alloc, object::Int32, { .value = ((ast::Int32*) node).value });
         case LetStatement:
             LetStatement* stmt = (LetStatement*) node;
-            Object i = eval(stmt.value, env, alloc);
-            if (i.is_err()) return i;
+            Object i;
+            if (stmt.value == null) {
+                i = allocator::new(alloc, object::Int32, { .value = 0 });
+            } else {
+                i = eval(stmt.value, env, alloc);
+                if (i.is_err()) return i;
+            }
             env.set(stmt.name.value, i);
             return i;
         case I32Stmt:

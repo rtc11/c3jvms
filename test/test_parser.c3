@@ -9,29 +9,25 @@ alias StrTuple = String[2];
 
 fn void statement_let() @test
 {
-    LetStatement* stmt = stmt_let("let num = 10;");
-    let_eq(stmt, "num", 10);
+    let_eq(statement("let num = 10;"), "num", 10);
+    let_eq(statement("let num;"), "num", null);
+    // let_eq(statement("let num; num = 10;"), "num", 10);
 }
 
 fn void statement_i32() @test
 {
-    I32Stmt* stmt = stmt_i32("i32 num = 10;");
-    i32_eq(stmt, "num", 10);
+    i32_eq(statement("i32 num = 10;"), "num", 10);
 }
 
 fn void statement_str() @test
 {
-    StrStmt* stmt = stmt_str(`str name = "foobar";`);
-    str_eq(stmt, "name", "foobar");
+    str_eq(statement(`str name = "foobar";`), "name", "foobar");
 }
 
 fn void statement_return() @test
 {
-    Lexer lexer = lexer::new(`return 5;`);
-    Parser parser = parser::new(lexer, allocator::temp());
-    Program prog = parser.parse_program();
-    any stmt = prog.statements[0];
-    test::eq(((ReturnStatement*) stmt).token_literal(), "return");
+    return_eq(statement("return 5;"), 5);
+    return_eq(statement(`return "ok";`), "ok");
 }
 
 fn void expression_identifier() @test
@@ -258,49 +254,60 @@ fn void expression_macro() @test
     test_expression_infix(body_stmt.expression, "x", "+", "y"); 
 }
 
-fn LetStatement* stmt_let(String input)
+// fn void expression_struct() @test
+// {
+//     StructDefinition* stmt = (StructDefinition*) statement(`
+//         struct person {
+//             i32 id;
+//             str name;
+//         }`
+//     );
+//     test::eq("person", stmt.name.value);
+//     test::eq(2, stmt.fields.len());
+// }
+
+fn Statement statement(String input)
 {
     Lexer lexer = lexer::new(input);
     Parser parser = parser::new(lexer, allocator::temp());
     Program prog = parser.parse_program();
-    return (LetStatement*) prog.statements[0];
+    check_parser_errors(&parser);
+    return prog.statements[0];
 }
 
-fn I32Stmt* stmt_i32(String input)
+macro let_eq(Statement stmt, String expect_name, expect_expr)
 {
-    Lexer lexer = lexer::new(input);
-    Parser parser = parser::new(lexer, allocator::temp());
-    Program prog = parser.parse_program();
-    return (I32Stmt*) prog.statements[0];
+    test::eq(stmt.type, LetStatement.typeid);
+    LetStatement* let = (LetStatement*) stmt;
+    test::eq(let.token_literal(), "let");
+    test::eq(let.name.value, expect_name);
+    expr_eq(let.value, expect_expr);
 }
 
-fn StrStmt* stmt_str(String input)
+macro i32_eq(Statement stmt, String expect_name, expect_expr)
 {
-    Lexer lexer = lexer::new(input);
-    Parser parser = parser::new(lexer, allocator::temp());
-    Program prog = parser.parse_program();
-    return (StrStmt*) prog.statements[0];
+    test::eq(stmt.type, I32Stmt.typeid);
+    I32Stmt* i32 = (I32Stmt*) stmt;
+    test::eq(i32.token_literal(), "i32");
+    test::eq(i32.name.value, expect_name);
+    expr_eq(i32.value, expect_expr);
 }
 
-macro let_eq(LetStatement* stmt, String expect_name, expect_expr)
+macro str_eq(Statement stmt, String expect_name, expect_expr)
 {
-    test::eq(stmt.token_literal(), "let");
-    test::eq(stmt.name.value, expect_name);
-    expr_eq(stmt.value, expect_expr);
+    test::eq(stmt.type, StrStmt.typeid);
+    StrStmt* str = (StrStmt*) stmt;
+    test::eq(str.token_literal(), "str");
+    test::eq(str.name.value, expect_name);
+    expr_eq(str.value, expect_expr);
 }
 
-macro i32_eq(I32Stmt* stmt, String expect_name, expect_expr)
+macro return_eq(Statement stmt, expect_expr)
 {
-    test::eq(stmt.token_literal(), "i32");
-    test::eq(stmt.name.value, expect_name);
-    expr_eq(stmt.value, expect_expr);
-}
-
-macro str_eq(StrStmt* stmt, String expect_name, expect_expr)
-{
-    test::eq(stmt.token_literal(), "str");
-    test::eq(stmt.name.value, expect_name);
-    expr_eq(stmt.value, expect_expr);
+    test::eq(stmt.type, ReturnStatement.typeid);
+    ReturnStatement* ret = (ReturnStatement*) stmt;
+    test::eq(ret.token_literal(), "return");
+    expr_eq(ret.return_value, expect_expr);
 }
 
 fn Expression expression(String input)
@@ -343,6 +350,7 @@ macro expr_eq(Expression expr, expected)
         $case bool: bool_eq(expr, expected);
         $case int: i32e_eq(expr, expected);
         $case String: identifier_eq(expr, expected);
+        $case void*: test::eq(expr, expected);
         $default: $error @sprintf("Invalid type %s", $typeof(expected).nameof);
     $endswitch
 }
