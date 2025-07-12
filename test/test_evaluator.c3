@@ -116,6 +116,32 @@ fn void eval_stmt_str() @test
     err_eq(test_eval(`str a = 5; a;`), string::tformat("cannot assign value of %s to variable of %s", ascii::colorize(GOLD, "i32"), ascii::colorize(GOLD, "str")));
 }
 
+fn void eval_struct() @test
+{
+    Environment* env = environment::new(allocator::temp());
+    Object o = test_eval(`
+        struct Person {
+            let name;
+            let age;
+        }
+    `, env);
+    null_eq(o);
+    Object person = env.get("Person")!!;
+    test::ne(null, person);
+    test::eq(StructDef.typeid, person.type);
+    StructDef* def = (StructDef*) person;
+    test::eq("Person", def.struct_name);
+    test::eq(2, def.fields.len());
+    test::eq(LetStatement.typeid, def.fields[0].type);
+    LetStatement* name = (LetStatement*) def.fields[0];
+    test::eq("name", name.name.value);
+    test::eq(null, name.value);
+    test::eq(LetStatement.typeid, def.fields[1].type);
+    LetStatement* age = (LetStatement*) def.fields[1];
+    test::eq("age", age.name.value);
+    test::eq(null, age.value);
+}
+
 fn void error_handling() @test
 {
     err_eq(test_eval("5 + true;"), "type mismatch: i32 + bool");
@@ -373,12 +399,11 @@ fn void null_eq(Object obj)
     test::eq(obj.type, Null.typeid);
 }
 
-fn Object test_eval(String input)
+fn Object test_eval(String input, Environment* env = environment::new(allocator::temp()))
 {
     Lexer lexer = lexer::new(input);
     Parser parser = parser::new(lexer, allocator::temp());
     Program prog = parser.parse_program();
-    Environment* env = environment::new(allocator::temp());
     return evaluator::eval(&prog, env, allocator::temp());
 }
 

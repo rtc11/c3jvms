@@ -119,6 +119,9 @@ fn Program Parser.parse_program(&self)
             case LET: 
                 LetStatement* stmt = self.parse_let_stmt();
                 if (stmt != null) stmts.push(stmt);
+            case STRUCT:
+                StructDefinition* stmt = self.parse_struct_definition();
+                if (stmt != null) stmts.push(stmt);
             case RETURN:
                 ReturnStatement* stmt = self.parse_return_stmt();
                 if (stmt != null) stmts.push(stmt);
@@ -181,6 +184,46 @@ fn StrStmt* Parser.parse_str_stmt(&self)
     if (DEBUG) io::printfn("parse_str_stmt OK");
     return stmt;
 }
+
+fn StructDefinition* Parser.parse_struct_definition(&self)
+{
+    if (DEBUG) io::printfn("parse_struct_definition");
+    Token token = self.cur;
+    if(!self.expect_peek(IDENTIFIER)) return null;
+    Identifier* name = (Identifier*) self.parse_identifier();
+
+    if (!self.expect_peek(L_BRACE)) return null;
+
+    List{Statement} fields;
+    fields.tinit();
+
+    while(!self.peek_token_is(R_BRACE)) {
+        self.next_token();
+        switch (self.cur.type) {
+            case I32: 
+                I32Stmt* stmt = self.parse_i32_stmt();
+                if (stmt != null) fields.push(stmt);
+            case STR: 
+                StrStmt* stmt = self.parse_str_stmt();
+                if (stmt != null) fields.push(stmt);
+            // TODO: remove LET statement support in struct definitions, only for POC
+            case LET:
+                LetStatement* stmt = self.parse_let_stmt();
+                if (stmt != null) fields.push(stmt); 
+            default: 
+                io::printfn("%s not valid in struct definitions", self.cur);
+        }
+    }
+    if (!self.expect_peek(R_BRACE)) return null;
+    StructDefinition* stmt = allocator::new(self.allocator, StructDefinition, {
+        .token = token,
+        .name = *name,
+        .fields = fields,
+    });
+    if (DEBUG) io::printfn("parse_struct_definition OK");
+    return stmt;
+}
+
 
 fn ReturnStatement* Parser.parse_return_stmt(&self)
 {

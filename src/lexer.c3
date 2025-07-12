@@ -175,6 +175,7 @@ fn Token Lexer.read_identifier(&self)
         case "macro": return {MACRO, identifier};  
         case "i32": return {I32, identifier};  
         case "str": return {STR, identifier};  
+        case "struct": return {STRUCT, identifier};  
         default: return {IDENTIFIER, identifier};
     }
 }
@@ -214,9 +215,10 @@ enum TokenType : (String literal)
     EQ             = "==",
     NEQ            = "!=",
 
-    LET            = "let", // keyword let
-    I32            = "i32", // keyword int
-    STR            = "str", // keyword str
+    LET            = "let",    // keyword let
+    I32            = "i32",    // keyword int
+    STR            = "str",    // keyword str
+    STRUCT         = "struct", // keyword str
 
     STR_LITERAL    = "",    // string literal like "hello"
     INT_LITERAL    = "",    // interger literal like 42

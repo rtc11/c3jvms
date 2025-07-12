@@ -106,7 +106,35 @@ fn Object eval(Node node, Environment* env, Allocator alloc)
             return eval_expr_index(left, idx, alloc);
         case ast::HashMap:
             return eval_hashmap((ast::HashMap*) node, env, alloc);
-        // case ast::Dot: atm only function calls is dotted, see ast::Call
+        case StructLiteral:
+            StructLiteral* lit = (StructLiteral*) node;
+            map::HashMap{String, Object} fields;
+            fields.tinit();
+            lit.field_values.@each(; Identifier field, Expression expr) {
+                Object val = eval(expr, env, alloc);
+                if (val.is_err()) return val;
+                fields[field.value] = val;
+            };
+            return allocator::new(alloc, StructInstance, {
+                .instance_name = lit.struct_name.value,
+                .fields = fields,
+            });
+        case StructDefinition:
+            StructDefinition* def = (StructDefinition*) node;
+            Object i = allocator::new(alloc, StructDef, {
+                .struct_name = def.name.value,
+                .fields = def.fields,
+            });
+            env.set(def.name.value, i);
+            return &NULL;
+        case FieldAccess:
+            FieldAccess* access = (FieldAccess*) node;
+            Object obj = eval(access.left, env, alloc);
+            if (obj.is_err()) return obj;
+            if (obj.type != StructInstance.typeid) return err("cannot access field on non-struct object");
+            StructInstance* inst = (StructInstance*) obj;
+            if (try val = inst.fields.get(access.field.value)) return val; 
+            return err("field '%s' not found in struct '%s'", access.field.value, inst.instance_name);
         default: 
             return err("Unknown node %s", node);
     }
@@ -346,9 +374,6 @@ fn Object apply_function(Object fun, List{Object} args, Allocator alloc)
             Environment* env_ext = extend_function_env(function, args, alloc);
             Object evaluated = eval(function.body, env_ext, alloc);
             return unwrap_return_value(evaluated);
-        // case object::Builtin:
-        //     object::Builtin* builtin = (object::Builtin*) fun;
-        //     return builtin.fun(args, alloc);
         default: 
             return err("not a function: %s", fun.inspect());
     }

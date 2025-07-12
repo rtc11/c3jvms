@@ -254,17 +254,25 @@ fn void expression_macro() @test
     test_expression_infix(body_stmt.expression, "x", "+", "y"); 
 }
 
-// fn void expression_struct() @test
-// {
-//     StructDefinition* stmt = (StructDefinition*) statement(`
-//         struct person {
-//             i32 id;
-//             str name;
-//         }`
-//     );
-//     test::eq("person", stmt.name.value);
-//     test::eq(2, stmt.fields.len());
-// }
+fn void expression_struct() @test
+{
+    StructDefinition* stmt = (StructDefinition*) statement(`
+        struct person {
+            let id;
+            let name;
+        }`
+    );
+    test::eq("person", stmt.name.value);
+    test::eq(2, stmt.fields.len());
+    test::eq(LetStatement.typeid, stmt.fields[0].type);
+    LetStatement* id = (LetStatement*) stmt.fields[0];
+    test::eq("id", id.name.value);
+    test::eq(null, id.value);
+    test::eq(LetStatement.typeid, stmt.fields[1].type);
+    LetStatement* name = (LetStatement*) stmt.fields[1];
+    test::eq("name", name.name.value);
+    test::eq(null, name.value);
+}
 
 fn Statement statement(String input)
 {

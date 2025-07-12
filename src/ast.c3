@@ -38,6 +38,8 @@ fn String Identifier.token_literal(&self) @dynamic => self.token.literal;
 fn usz? Identifier.to_format(&self, Formatter* f) @dynamic {
     return f.printf("%s", self.value);
 }
+fn uint Identifier.hash(&self) => string::tformat("%s", self).hash(); // used for c3 hashmap
+fn bool Identifier.equals(self, Identifier other) @operator(==) => self.value == other.value; // used for c3 hashmap
 
 struct LetStatement (Statement)
 {
@@ -275,3 +277,42 @@ fn usz? Dot.to_format(&self, Formatter* f) @dynamic {
     return f.printf("(%s.%s)", self.left, self.name);
 }
 
+struct StructDefinition (Statement)
+{
+    Token token; // struct
+    Identifier name; 
+    List{Statement} fields;
+}
+fn String StructDefinition.token_literal(&self) @dynamic => self.token.literal;
+fn usz? StructDefinition.to_format(&self, Formatter* f) @dynamic {
+	String[] fields = allocator::alloc_array(allocator::temp(), String, self.fields.len());
+    foreach(i, field: self.fields) fields[i] = string::tformat("%s", field);
+    return f.printf("%s{%s}", self.name, string::join(allocator::temp(), fields, ", "));
+}
+
+struct StructLiteral (Expression)
+{
+    Token token; // {
+    Identifier struct_name;
+    map::HashMap{Identifier, Expression} field_values;
+}
+fn String StructLiteral.token_literal(&self) @dynamic => self.token.literal;
+fn usz? StructLiteral.to_format(&self, Formatter* f) @dynamic {
+	String[] field_values = allocator::alloc_array(allocator::temp(), String, self.field_values.len());
+    int i;
+    self.field_values.@each(; Identifier k, Expression v) {
+        field_values[i++] = string::tformat("%s:%s", k, v);
+    };
+    return f.printf("%s{%s}", self.struct_name, string::join(allocator::temp(), field_values, ", "));
+}
+
+struct FieldAccess (Expression)
+{
+    Token token;
+    Expression left;
+    Identifier field;
+}
+fn String FieldAccess.token_literal(&self) @dynamic => self.token.literal;
+fn usz? FieldAccess.to_format(&self, Formatter* f) @dynamic {
+    return f.printf("(%s.%s)", self.left, self.field);
+}

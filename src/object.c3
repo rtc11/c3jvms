@@ -158,3 +158,29 @@ fn String Macro.inspect(&self) @dynamic {
         self.body,
     );
 }
+
+struct StructInstance (Object)
+{
+    String instance_name;
+    map::HashMap{String, Object} fields;
+}
+fn String StructInstance.name(&self) @dynamic => self.instance_name;
+fn String StructInstance.inspect(&self) @dynamic {
+	String[] fields = allocator::alloc_array(allocator::temp(), String, self.fields.len());
+    int i;
+    self.fields.@each(; String key, Object val) {
+        fields[i++] = string::tformat("%s: %s", key, val.inspect());
+    };
+	return string::tformat("%s{%s}", self.instance_name, string::join(allocator::temp(), fields, ", "));
+}
+
+struct StructDef (Object)
+{
+    String struct_name;
+    List{Statement} fields;
+}
+fn String StructDef.name(&self) @dynamic => self.struct_name;
+fn String StructDef.inspect(&self) @dynamic {
+    String[] fields = allocator::alloc_array(allocator::temp(), String, self.fields.len());
+    return string::tformat("%s{%s}", self.struct_name, string::join(allocator::temp(), fields, ", "));
+}

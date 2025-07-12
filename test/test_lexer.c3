@@ -34,6 +34,8 @@ fn void next_token() @test
         i32 num = 100;
 
         num.len();
+
+        struct person {};
     `);
 
     token_eq(lexer.next(), { LET, "let"});
@@ -152,6 +154,12 @@ fn void next_token() @test
     token_eq(lexer.next(), { IDENTIFIER, "len"});
     token_eq(lexer.next(), { L_PAREN, "("});
     token_eq(lexer.next(), { R_PAREN, ")"});
+    token_eq(lexer.next(), { SEMICOLON, ";"});
+
+    token_eq(lexer.next(), { STRUCT, "struct"});
+    token_eq(lexer.next(), { IDENTIFIER, "person"});
+    token_eq(lexer.next(), { L_BRACE, "{"});
+    token_eq(lexer.next(), { R_BRACE, "}"});
     token_eq(lexer.next(), { SEMICOLON, ";"});
 
     token_eq(lexer.next(), { EOF, ""});
