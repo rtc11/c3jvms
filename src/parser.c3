@@ -151,7 +151,6 @@ fn LetStatement* Parser.parse_let_stmt(&self)
         default:
             self.peek_error(ASSIGN);
             self.peek_error(SEMICOLON);
-            return null;
     }
     if (DEBUG) io::printfn("parse_let_stmt OK");
     return stmt;
@@ -163,10 +162,18 @@ fn I32Stmt* Parser.parse_i32_stmt(&self)
     I32Stmt* stmt = allocator::new(self.allocator, I32Stmt, { .token = self.cur });
     if (!self.expect_peek(IDENTIFIER)) return null;
     stmt.name = { self.cur, self.cur.literal };
-    if (!self.expect_peek(ASSIGN)) return null;
-    self.next_token();
-    stmt.value = self.parse_expression(LOWEST);
-    if (self.peek_token_is(SEMICOLON)) self.next_token();
+    switch (self.peek.type) {
+        case ASSIGN:
+            self.next_token(); // consume =
+            self.next_token(); // advance to expression
+            stmt.value = self.parse_expression(LOWEST);
+            if (self.peek_token_is(SEMICOLON)) self.next_token();
+        case SEMICOLON:
+            self.next_token(); // consume ;
+        default:
+            self.peek_error(ASSIGN);
+            self.peek_error(SEMICOLON);
+    }
     if (DEBUG) io::printfn("parse_i32_stmt OK");
     return stmt;
 }
@@ -177,10 +184,18 @@ fn StrStmt* Parser.parse_str_stmt(&self)
     StrStmt* stmt = allocator::new(self.allocator, StrStmt, { .token = self.cur });
     if (!self.expect_peek(IDENTIFIER)) return null;
     stmt.name = { self.cur, self.cur.literal };
-    if (!self.expect_peek(ASSIGN)) return null;
-    self.next_token();
-    stmt.value = self.parse_expression(LOWEST);
-    if (self.peek_token_is(SEMICOLON)) self.next_token();
+    switch (self.peek.type) {
+        case ASSIGN:
+            self.next_token(); // consume =
+            self.next_token(); // advance to expression
+            stmt.value = self.parse_expression(LOWEST);
+            if (self.peek_token_is(SEMICOLON)) self.next_token();
+        case SEMICOLON:
+            self.next_token(); // consume ;
+        default:
+            self.peek_error(ASSIGN);
+            self.peek_error(SEMICOLON);
+    }
     if (DEBUG) io::printfn("parse_str_stmt OK");
     return stmt;
 }
@@ -206,12 +221,8 @@ fn StructDefinition* Parser.parse_struct_definition(&self)
             case STR: 
                 StrStmt* stmt = self.parse_str_stmt();
                 if (stmt != null) fields.push(stmt);
-            // TODO: remove LET statement support in struct definitions, only for POC
-            case LET:
-                LetStatement* stmt = self.parse_let_stmt();
-                if (stmt != null) fields.push(stmt); 
             default: 
-                io::printfn("%s not valid in struct definitions", self.cur);
+                io::printfn("%s not valid in struct definitions", self.cur.literal);
         }
     }
     if (!self.expect_peek(R_BRACE)) return null;

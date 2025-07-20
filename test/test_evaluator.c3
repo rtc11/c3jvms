@@ -121,8 +121,8 @@ fn void eval_struct() @test
     Environment* env = environment::new(allocator::temp());
     Object o = test_eval(`
         struct Person {
-            let name;
-            let age;
+            str name;
+            i32 age;
         }
     `, env);
     null_eq(o);
@@ -132,12 +132,12 @@ fn void eval_struct() @test
     StructDef* def = (StructDef*) person;
     test::eq("Person", def.struct_name);
     test::eq(2, def.fields.len());
-    test::eq(LetStatement.typeid, def.fields[0].type);
-    LetStatement* name = (LetStatement*) def.fields[0];
+    test::eq(StrStmt.typeid, def.fields[0].type);
+    StrStmt* name = (StrStmt*) def.fields[0];
     test::eq("name", name.name.value);
     test::eq(null, name.value);
-    test::eq(LetStatement.typeid, def.fields[1].type);
-    LetStatement* age = (LetStatement*) def.fields[1];
+    test::eq(I32Stmt.typeid, def.fields[1].type);
+    I32Stmt* age = (I32Stmt*) def.fields[1];
     test::eq("age", age.name.value);
     test::eq(null, age.value);
 }

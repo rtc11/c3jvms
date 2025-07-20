@@ -258,20 +258,25 @@ fn void expression_struct() @test
 {
     StructDefinition* stmt = (StructDefinition*) statement(`
         struct person {
-            let id;
-            let name;
+            i32 id;
+            str name;
+            i32 age;
         }`
     );
     test::eq("person", stmt.name.value);
-    test::eq(2, stmt.fields.len());
-    test::eq(LetStatement.typeid, stmt.fields[0].type);
-    LetStatement* id = (LetStatement*) stmt.fields[0];
+    test::eq(3, stmt.fields.len());
+    test::eq(I32Stmt.typeid, stmt.fields[0].type);
+    I32Stmt* id = (I32Stmt*) stmt.fields[0];
     test::eq("id", id.name.value);
     test::eq(null, id.value);
-    test::eq(LetStatement.typeid, stmt.fields[1].type);
-    LetStatement* name = (LetStatement*) stmt.fields[1];
+    test::eq(StrStmt.typeid, stmt.fields[1].type);
+    StrStmt* name = (StrStmt*) stmt.fields[1];
     test::eq("name", name.name.value);
     test::eq(null, name.value);
+    test::eq(I32Stmt.typeid, stmt.fields[2].type);
+    I32Stmt* age = (I32Stmt*) stmt.fields[2];
+    test::eq("age", age.name.value);
+    test::eq(null, age.value);
 }
 
 fn Statement statement(String input)
