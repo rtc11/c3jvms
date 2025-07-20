@@ -11,6 +11,7 @@ enum Builtins : (String literal, Builtin obj){
     LAST = { "last", { &builtin_last } },
     REST = { "rest", { &builtin_rest } },
     SLICE = { "slice", { &builtin_slice } },
+    PRINTN = { "printn", { &builtin_printn } },
     PRINT = { "print", { &builtin_print } },
 }
 
@@ -98,9 +99,15 @@ fn Object builtin_slice(List{Object} args, Allocator alloc)
     return array;
 }
 
-fn Object builtin_print(List{Object} args, Allocator alloc)
+fn Object builtin_printn(List{Object} args, Allocator alloc)
 {
     foreach(arg: args) io::printfn("%s", arg.inspect());
+    return &evaluator::NULL;
+}
+
+fn Object builtin_print(List{Object} args, Allocator alloc)
+{
+    foreach(arg: args) io::printf("%s", arg.inspect());
     return &evaluator::NULL;
 }
 

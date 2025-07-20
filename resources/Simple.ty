@@ -1,3 +1,21 @@
 i32 num = 10;
 i32 num2 = 5;
-num + num2 * 2;
+print("20 == "); printn(num + num2 * 2);
+
+struct Person
+{
+    str name;
+    i32 age;
+}
+
+let main = fn()
+{
+    printn(32);
+    return "32";
+}
+
+printn("main: " + main());
+printn(42)
+
+let add = fn(x,y) { 1 + 2 }
+printn(add(1, 2));

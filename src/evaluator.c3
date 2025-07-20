@@ -185,6 +185,8 @@ fn Object eval_identifier(Identifier* ident, Environment* env)
 {
     if (try obj = env.get(ident.value)) return obj;
     if (try builtin = Builtins.lookup_field(literal, ident.value)) {
+        if (builtin.literal == "printn") return @tclone(builtin.obj);
+        if (builtin.literal == "print") return @tclone(builtin.obj);
         return err("unknown identifier %s, perhaps you ment the method .%s()", ascii::str(ident.value), ascii::colorize(GOLD, ident.value));
     }
     return err("unknown identifier %s", ascii::str(ident.value));
@@ -374,6 +376,9 @@ fn Object apply_function(Object fun, List{Object} args, Allocator alloc)
             Environment* env_ext = extend_function_env(function, args, alloc);
             Object evaluated = eval(function.body, env_ext, alloc);
             return unwrap_return_value(evaluated);
+        case object::Builtin:
+            object::Builtin* builtin = (object::Builtin*) fun;
+        return builtin.fun(args, alloc);
         default: 
             return err("not a function: %s", fun.inspect());
     }

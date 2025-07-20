@@ -12,16 +12,16 @@ fn void main(String[] args)
         // read_ty(args);
         // read_class(args);
         Clock c = clock::now();
-        String output = compile(args)!!;
+        compile(args)!!;
+        // io::printfn("%s", output);
         io::printfn(" - %s", c.mark());
-        io::printfn("%s", output);
     };
 }
 
 faultdef COMPILATION_ERROR;
-fn String? compile(String[] args)
+fn void? compile(String[] args)
 {
-    ascii::print_logo(linebreak: false);
+    ascii::print_logo(linebreak: true);
     if (args.len != 2) {
         ascii::print_err("compiler require a file to compile, e.g. 'ty main.ty'");
         return COMPILATION_ERROR?;
@@ -38,8 +38,9 @@ fn String? compile(String[] args)
         }
     }
     Object evaluated = evaluator::eval(&prog, env, allocator::temp());
-    return string::tformat("%s", ascii::randomize(string::tformat("%s", evaluated.inspect())));
-    // io::printfn("%s", ascii::colorize_str(string::tformat("%s", evaluated.inspect())));
+    if (evaluated.is_err()) {
+        io::printfn("%s", ascii::randomize(string::tformat("%s", evaluated.inspect())));
+    }
 }
 
 fn void read_ty(String[] args)
