@@ -19,3 +19,10 @@ printn(42)
 
 let add = fn(x,y) { 1 + 2 }
 printn(add(1, 2));
+
+let p = Person { 
+    name: "Bob",
+    age: 32,
+};
+
+printn(p);

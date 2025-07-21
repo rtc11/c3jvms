@@ -202,7 +202,6 @@ fn StrStmt* Parser.parse_str_stmt(&self)
 
 fn StructDefinition* Parser.parse_struct_definition(&self)
 {
-    if (DEBUG) io::printfn("parse_struct_definition");
     Token token = self.cur;
     if(!self.expect_peek(IDENTIFIER)) return null;
     Identifier* name = (Identifier*) self.parse_identifier();
@@ -231,10 +230,37 @@ fn StructDefinition* Parser.parse_struct_definition(&self)
         .name = *name,
         .fields = fields,
     });
-    if (DEBUG) io::printfn("parse_struct_definition OK");
     return stmt;
 }
 
+fn StructLiteral* Parser.parse_struct_literal(&self, Identifier* struct_name)
+{
+    self.next_token(); // advance to L_BRACE
+    Token token = self.cur;
+    map::HashMap{Identifier, Expression} fields;
+    fields.tinit();
+    while(!self.peek_token_is(R_BRACE)) {
+        self.next_token();
+        if (self.cur.type != IDENTIFIER) {
+            self.errors.push(string::tformat("expected identifier as struct field key, got %s", self.cur.literal));
+            return null;
+        }
+        Identifier* field = (Identifier*) self.parse_identifier();
+        if (!self.expect_peek(COLON)) return null;
+        self.next_token(); // move to expression value
+        Expression value = self.parse_expression(LOWEST);
+        fields[*field] = value;
+        if (self.peek_token_is(COMMA)) self.next_token();
+    }
+    if (!self.expect_peek(R_BRACE)) return null;
+
+    StructLiteral* lit = allocator::new(self.allocator, StructLiteral, {
+        .token = token,
+        .struct_name = *struct_name,
+        .field_values = fields,
+    });
+    return lit;
+}
 
 fn ReturnStatement* Parser.parse_return_stmt(&self)
 {
@@ -257,6 +283,10 @@ fn Expression Parser.parse_expression(&self, Presendence presendence)
 {
     if (try fn_parse_prefix = self.prefixes[self.cur.type]) {
         Expression left_expr = fn_parse_prefix(self);
+
+        if (left_expr.type == Identifier.typeid && self.peek_token_is(L_BRACE)) {
+            return self.parse_struct_literal((Identifier*) left_expr);
+        }
 
         while(!self.peek_token_is(SEMICOLON) && presendence.ordinal < self.peek_presendence().ordinal) {
             if (try fn_parse_infix = self.infixes[self.peek.type]) {

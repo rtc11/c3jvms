@@ -254,7 +254,7 @@ fn void expression_macro() @test
     test_expression_infix(body_stmt.expression, "x", "+", "y"); 
 }
 
-fn void expression_struct() @test
+fn void statement_struct() @test
 {
     StructDefinition* stmt = (StructDefinition*) statement(`
         struct person {
@@ -277,6 +277,32 @@ fn void expression_struct() @test
     I32Stmt* age = (I32Stmt*) stmt.fields[2];
     test::eq("age", age.name.value);
     test::eq(null, age.value);
+}
+
+fn void expression_struct() @test
+{
+    StructLiteral* expr = (StructLiteral*) expression(`person {
+        id: 1,
+        name: "Bob",
+        age: 32,
+    }`);
+    test::eq("person", expr.struct_name.value);
+    test::eq(3, expr.field_values.len());
+    expr.field_values.@each(; Identifier key, Expression value) {
+        switch (key.value) {
+            case "id":
+                test::eq(Int32.typeid, value.type);
+                test::eq(1, ((Int32*) value).value);
+            case "name":
+                test::eq(StrLiteral.typeid, value.type);
+                test::eq("Bob", ((StrLiteral*) value).value);
+            case "age":
+                test::eq(Int32.typeid, value.type);
+                test::eq(32, ((Int32*) value).value);
+            default: 
+                test::eq("", "expected field missing");
+        }
+    };
 }
 
 fn Statement statement(String input)
