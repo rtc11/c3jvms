@@ -127,14 +127,14 @@ fn Object eval(Node node, Environment* env, Allocator alloc)
             });
             env.set(def.name.value, i);
             return &NULL;
-        case FieldAccess:
-            FieldAccess* access = (FieldAccess*) node;
+        case Dot:
+            Dot* access = (Dot*) node;
             Object obj = eval(access.left, env, alloc);
             if (obj.is_err()) return obj;
             if (obj.type != StructInstance.typeid) return err("cannot access field on non-struct object");
             StructInstance* inst = (StructInstance*) obj;
-            if (try val = inst.fields.get(access.field.value)) return val; 
-            return err("field '%s' not found in struct '%s'", access.field.value, inst.instance_name);
+            if (try val = inst.fields.get(access.name.value)) return val; 
+            return err("field '%s' not found in struct '%s'", access.name.value, inst.instance_name);
         default: 
             return err("Unknown node %s", node);
     }

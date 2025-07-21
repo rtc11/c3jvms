@@ -119,13 +119,12 @@ fn void eval_stmt_str() @test
 fn void eval_struct() @test
 {
     Environment* env = environment::new(allocator::temp());
-    Object o = test_eval(`
+    null_eq(test_eval(`
         struct Person {
             str name;
             i32 age;
         }
-    `, env);
-    null_eq(o);
+    `, env));
     Object person = env.get("Person")!!;
     test::ne(null, person);
     test::eq(StructDef.typeid, person.type);
@@ -140,6 +139,19 @@ fn void eval_struct() @test
     I32Stmt* age = (I32Stmt*) def.fields[1];
     test::eq("age", age.name.value);
     test::eq(null, age.value);
+
+    Object o = test_eval(`
+        let p = Person {
+            name: "Bob",
+            age: 32,
+        };
+    `, env);
+    test::eq(StructInstance.typeid, o.type);
+    StructInstance* inst = (StructInstance*) o;
+    test::eq("Person", inst.instance_name);
+    test::eq(2, inst.fields.len());
+    test::eq("Bob", ((Str*) inst.fields["name"]!!).value);
+    test::eq(32, ((object::Int32*) inst.fields["age"]!!).value);
 }
 
 fn void error_handling() @test

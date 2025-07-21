@@ -26,3 +26,9 @@ let p = Person {
 };
 
 printn(p);
+i32 age = p.age;
+printn(age);
+printn(p.age);
+str name = p.name;
+printn(name);
+printn(p.name);

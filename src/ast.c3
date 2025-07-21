@@ -306,13 +306,3 @@ fn usz? StructLiteral.to_format(&self, Formatter* f) @dynamic {
     return f.printf("%s{%s}", self.struct_name, string::join(allocator::temp(), field_values, ", "));
 }
 
-struct FieldAccess (Expression)
-{
-    Token token;
-    Expression left;
-    Identifier field;
-}
-fn String FieldAccess.token_literal(&self) @dynamic => self.token.literal;
-fn usz? FieldAccess.to_format(&self, Formatter* f) @dynamic {
-    return f.printf("(%s.%s)", self.left, self.field);
-}
