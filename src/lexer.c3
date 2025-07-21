@@ -48,7 +48,13 @@ fn Token Lexer.next(&self)
             }
         case '-': token = { MINUS, "-" };
         case '+': token = { PLUS, "+" };
-        case '/': token = { SLASH, "/" };
+        case '/': 
+            if (self.peek() == '/') {
+                self.skip_comment();
+                return self.next();
+            } else {
+                token = { SLASH, "/" };
+            }
         case '*': token = { ASTERISK, "*" };
         case '<': token = { LT, "<" };
         case '>': token = { GT, ">" };
@@ -102,6 +108,13 @@ fn Token Lexer.next(&self)
 fn void Lexer.skip_spaces(&self)
 {
     while (self.ch.is_space()) {
+        self.read_char();
+    }
+}
+
+fn void Lexer.skip_comment(&self)
+{
+    while (self.ch != '\n' && self.ch != '\0') {
         self.read_char();
     }
 }
@@ -215,10 +228,10 @@ enum TokenType : (String literal)
     EQ             = "==",
     NEQ            = "!=",
 
-    LET            = "let",    // keyword let
-    I32            = "i32",    // keyword int
-    STR            = "str",    // keyword str
-    STRUCT         = "struct", // keyword str
+    LET            = "let",    // keyword 
+    I32            = "i32",    // keyword 
+    STR            = "str",    // keyword 
+    STRUCT         = "struct", // keyword
 
     STR_LITERAL    = "",    // string literal like "hello"
     INT_LITERAL    = "",    // interger literal like 42

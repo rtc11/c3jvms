@@ -31,4 +31,5 @@ printn(age);
 printn(p.age);
 str name = p.name;
 printn(name);
-printn(p.name);
+// comment
+printn(p.name); // another comment
