@@ -108,6 +108,11 @@ fn Object eval(Node node, Environment* env, Allocator alloc)
             return eval_hashmap((ast::HashMap*) node, env, alloc);
         case StructLiteral:
             StructLiteral* lit = (StructLiteral*) node;
+            Object? struct_definition_name = env.get(lit.struct_name.value);
+            if (catch struct_definition_name) return err("undefined struct: %s", lit.struct_name.value);
+            if (struct_definition_name.type != StructDef.typeid) {
+                return err("identifier %s is not a struct but %s", lit.struct_name.value, struct_definition_name.name());
+            }
             map::HashMap{String, Object} fields;
             fields.tinit();
             lit.field_values.@each(; Identifier field, Expression expr) {
@@ -126,6 +131,7 @@ fn Object eval(Node node, Environment* env, Allocator alloc)
                 .fields = def.fields,
             });
             env.set(def.name.value, i);
+            io::printfn("Defined struct %s", def.name.value);
             return &NULL;
         case Dot:
             Dot* access = (Dot*) node;
