@@ -1,6 +1,6 @@
 module test::evaluator;
 
-import ast, lexer, object, parser, environment, evaluator;
+import ast, lexer, runtime, parser, environment, evaluator;
 
 fn void define() @test
 {
@@ -18,9 +18,9 @@ fn void define() @test
     test::eq(2, prog.statements.len());
     if (try env.get("number")) test::eq("number should not be defined", "");
     if (try env.get("function")) test::eq("function should not be defined", "");
-    Object? obj = env.get("mymacro");
+    RuntimeValue? obj = env.get("mymacro");
     if (catch obj) test::eq("macro not in environment.", "");
-    object::Macro* m = (object::Macro*) obj!!;
+    runtime::Macro* m = (runtime::Macro*) obj!!;
     test::eq(2, m.parameters.len());
     test::eq("x", string::tformat("%s", m.parameters[0]));
     test::eq("y", string::tformat("%s", m.parameters[1]));

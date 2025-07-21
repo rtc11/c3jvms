@@ -1,19 +1,19 @@
-module object;
+module runtime;
 
 import std::io;
 import std::collections::list;
 import std::collections::map;
 import ascii, ast, environment;
 
-interface Object
+interface RuntimeValue
 {
     fn String inspect();
     fn String name();
 }
 
-fn bool Object.is_err(&self) => self.type == Error.typeid;
+fn bool RuntimeValue.is_err(&self) => self.type == Error.typeid;
 
-struct Int32 (Object, Hashable)
+struct Int32 (RuntimeValue, Hashable)
 {
     int value;
 }
@@ -21,7 +21,7 @@ fn String Int32.name(&self) @dynamic => "i32";
 fn String Int32.inspect(&self) @dynamic => string::tformat("%d", self.value);
 fn Hash Int32.hash(&self) @dynamic => { self.name(), self.value };
 
-struct Bool (Object, Hashable)
+struct Bool (RuntimeValue, Hashable)
 {
     bool value;
 }
@@ -29,21 +29,21 @@ fn String Bool.name(&self) @dynamic => "bool";
 fn String Bool.inspect(&self) @dynamic => string::tformat("%s", self.value);
 fn Hash Bool.hash(&self) @dynamic => { self.name(), self.value ? 1 : 0 };
 
-struct Null (Object)
+struct Null (RuntimeValue)
 {
     void* value;
 }
 fn String Null.name(&self) @dynamic => "null";
 fn String Null.inspect(&self) @dynamic => string::tformat("null");
 
-struct Return (Object)
+struct Return (RuntimeValue)
 {
-    Object value;
+    RuntimeValue value;
 }
 fn String Return.name(&self) @dynamic => "return";
 fn String Return.inspect(&self) @dynamic => string::tformat("%s", self.value.inspect());
 
-struct Error (Object)
+struct Error (RuntimeValue)
 {
     String message;
     String file;
@@ -61,7 +61,7 @@ fn String Error.inspect(&self) @dynamic
        self.func);
 } 
 
-struct Fn (Object)
+struct Fn (RuntimeValue)
 {
     List{Identifier} parameters;
     BlockStatement* body;
@@ -77,7 +77,7 @@ fn String Fn.inspect(&self) @dynamic {
     );
 }
 
-struct Str (Object, Hashable)
+struct Str (RuntimeValue, Hashable)
 {
     String value;
 }
@@ -85,18 +85,18 @@ fn String Str.name(&self) @dynamic => "str";
 fn String Str.inspect(&self) @dynamic => self.value;
 fn Hash Str.hash(&self) @dynamic => { self.name(), self.value.hash() };
 
-alias BuiltinFn = fn Object(List{Object}, Allocator);
+alias BuiltinFn = fn RuntimeValue(List{RuntimeValue}, Allocator);
 
-struct Builtin (Object)
+struct Builtin (RuntimeValue)
 {
     BuiltinFn fun;
 }
 fn String Builtin.name(&self) @dynamic => "builtin";
 fn String Builtin.inspect(&self) @dynamic => "builtin fn";
 
-struct Array (Object)
+struct Array (RuntimeValue)
 {
-    List{Object} elements;
+    List{RuntimeValue} elements;
 }
 fn String Array.name(&self) @dynamic => "array";
 fn String Array.inspect(&self) @dynamic {
@@ -115,11 +115,11 @@ fn uint Hash.hash(&self) => self.value; // used for c3 hashmap
 
 struct HashPair 
 {
-    Object key;
-    Object value;
+    RuntimeValue key;
+    RuntimeValue value;
 }
 
-struct HashMap (Object)
+struct HashMap (RuntimeValue)
 {
     map::HashMap{Hash, HashPair} pairs;
 }
@@ -137,14 +137,14 @@ interface Hashable {
      fn Hash hash();
 }
 
-struct Quote (Object)
+struct Quote (RuntimeValue)
 {
     Node node;
 }
 fn String Quote.name(&self) @dynamic => "quote";
 fn String Quote.inspect(&self) @dynamic => string::tformat("QUOTE(%s)", self.node);
 
-struct Macro (Object)
+struct Macro (RuntimeValue)
 {
     List{Identifier} parameters;
     BlockStatement* body;
@@ -159,22 +159,22 @@ fn String Macro.inspect(&self) @dynamic {
     );
 }
 
-struct StructInstance (Object)
+struct StructInstance (RuntimeValue)
 {
     String instance_name;
-    map::HashMap{String, Object} fields;
+    map::HashMap{String, RuntimeValue} fields;
 }
 fn String StructInstance.name(&self) @dynamic => self.instance_name;
 fn String StructInstance.inspect(&self) @dynamic {
 	String[] fields = allocator::alloc_array(allocator::temp(), String, self.fields.len());
     int i;
-    self.fields.@each(; String key, Object val) {
+    self.fields.@each(; String key, RuntimeValue val) {
         fields[i++] = string::tformat("%s: %s", key, val.inspect());
     };
 	return string::tformat("%s{%s}", self.instance_name, string::join(allocator::temp(), fields, ", "));
 }
 
-struct StructDef (Object)
+struct StructDef (RuntimeValue)
 {
     String struct_name;
     List{Statement} fields;

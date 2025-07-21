@@ -1,7 +1,7 @@
 module test::evaluator;
 
 import std::io;
-import evaluator, object, parser, lexer, environment;
+import evaluator, runtime, parser, lexer, environment;
 
 fn void quote() @test
 {
@@ -23,11 +23,11 @@ fn void quote() @test
     quote_eq(test_eval(`str foobar = "8"; quote(unquote(foobar))`), "8");
 }
 
-macro quote_eq(Object obj, expected)
+macro quote_eq(RuntimeValue obj, expected)
 {
     switch (obj.type) {
         case Quote:
-            object::Quote* res = (object::Quote*) obj;
+            runtime::Quote* res = (runtime::Quote*) obj;
             test::eq(expected, string::tformat("%s", res.node));
         default: 
             test::eq(string::tformat("%s", obj.name()), "not a quote");

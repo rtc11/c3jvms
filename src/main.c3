@@ -4,7 +4,7 @@ import std::collections::anylist;
 import std::net;
 import std::time;
 import classfile, assembler; 
-import ast, lexer, parser, ascii, object, evaluator, environment;
+import ast, lexer, parser, ascii, runtime, evaluator, environment;
 
 fn void main(String[] args)
 {
@@ -37,7 +37,7 @@ fn void? compile(String[] args)
             io::printfn("\t%s", ascii::colorize(RED, string::tformat("%s", err)));
         }
     }
-    Object evaluated = evaluator::eval(&prog, env, allocator::temp());
+    RuntimeValue evaluated = evaluator::eval(&prog, env, allocator::temp());
     if (evaluated.is_err()) {
         io::printfn("%s", ascii::randomize(string::tformat("%s", evaluated.inspect())));
     }

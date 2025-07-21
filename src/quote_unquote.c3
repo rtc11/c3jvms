@@ -1,12 +1,12 @@
 module evaluator;
 
 import std::io;
-import ast, object, environment;
+import ast, runtime, environment;
 
-fn Object quote(Node node, Environment* env, Allocator alloc)
+fn RuntimeValue quote(Node node, Environment* env, Allocator alloc)
 {
     node = eval_unquote_calls(node, env, alloc);
-    return allocator::new(alloc, object::Quote, { 
+    return allocator::new(alloc, runtime::Quote, { 
         .node = node, 
     });
 }
@@ -22,7 +22,7 @@ fn Node replace_calls(Node node, Environment* env, Allocator alloc)
     if (node.type != Call.typeid) return node;
     Call* call = (Call*) node;
     if(call.arguments.len() != 1) return node;
-    Object unquoted = eval(call.arguments[0], env, alloc);
+    RuntimeValue unquoted = eval(call.arguments[0], env, alloc);
     return convert_object_to_ast_node(unquoted, alloc);
 }
 
@@ -34,24 +34,24 @@ fn bool is_unquote_call(Node node)
     return false;
 }
 
-fn Node convert_object_to_ast_node(Object obj, Allocator alloc)
+fn Node convert_object_to_ast_node(RuntimeValue obj, Allocator alloc)
 {
     switch (obj.type)
     {
-        case object::Int32:
-            object::Int32* i32 = (object::Int32*) obj;
+        case runtime::Int32:
+            runtime::Int32* i32 = (runtime::Int32*) obj;
             return allocator::new(alloc, ast::Int32, {
                 .token = { INT_LITERAL, string::tformat("%d", i32.value) },
                 .value = i32.value,
             });
-        case object::Str:
-            object::Str* str = (object::Str*) obj;
+        case runtime::Str:
+            runtime::Str* str = (runtime::Str*) obj;
             return allocator::new(alloc, ast::StrLiteral, {
                 .token = { STR_LITERAL, string::tformat("%s", str.value) },
                 .value = str.value,
             });
-        case object::Bool:
-            object::Bool* b = (object::Bool*) obj;
+        case runtime::Bool:
+            runtime::Bool* b = (runtime::Bool*) obj;
             return allocator::new(alloc, ast::Bool, {
                 .token = b.value ? { TRUE, "true" } : { FALSE, "false" },
                 .value = b.value,

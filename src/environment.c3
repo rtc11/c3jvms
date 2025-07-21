@@ -2,18 +2,18 @@ module environment;
 
 import std::collections::map;
 import std::io;
-import object;
+import runtime;
 
 struct Environment
 {
     Allocator allocator;
-    HashMap{String, Object} store;
+    HashMap{String, RuntimeValue} store;
     Environment* outer;
 }
 
 fn Environment* new(Allocator allocator)
 {
-    HashMap{String, Object} store;
+    HashMap{String, RuntimeValue} store;
     store.tinit();
     return allocator::new(allocator, Environment, { 
         .allocator = allocator,
@@ -28,16 +28,16 @@ fn Environment* new_enclosed(Environment* outer, Allocator allocator)
     return env;
 }
 
-fn Object? Environment.get(&self, String name)
+fn RuntimeValue? Environment.get(&self, String name)
 {
-    Object? obj = self.store[name];
+    RuntimeValue? obj = self.store[name];
     if (catch obj) {
         if (self.outer != null) return self.outer.get(name)!;
     }
     return obj;
 }
 
-fn Object Environment.set(&self, String name, Object value)
+fn RuntimeValue Environment.set(&self, String name, RuntimeValue value)
 {
     self.store[name] = value;
     return value;

@@ -2,7 +2,7 @@ module evaluator;
 
 import std::collections::list;
 import std::io;
-import ast, object, environment;
+import ast, runtime, environment;
 
 fn void define_macro(Program* prog, Environment* env, Allocator alloc)
 {
@@ -30,12 +30,12 @@ fn Node expand(Node node, Environment* env, Allocator alloc) @private
     Call* call = (Call*) node;
     if (call.function.type != Identifier.typeid) return node;
     Identifier* ident = (Identifier*) call.function;
-    Object? obj = env.get(ident.value);
+    RuntimeValue? obj = env.get(ident.value);
     if (catch obj) return node;
-    object::Macro* mac = (object::Macro*) obj;
+    runtime::Macro* mac = (runtime::Macro*) obj;
     List{Quote} args = quote_args(call, alloc);
     Environment* eval_env = extend_macro_env(mac, args, alloc);
-    Object evaluated = evaluator::eval(mac.body, eval_env, alloc); 
+    RuntimeValue evaluated = evaluator::eval(mac.body, eval_env, alloc); 
     if (evaluated.type != Quote.typeid) unreachable("we only support AST-node from macros");
     Quote* quote = (Quote*) evaluated;
     return quote.node;
@@ -51,7 +51,7 @@ fn List{Quote} quote_args(Call* expr, Allocator alloc)
     return args;
 }
 
-fn Environment* extend_macro_env(object::Macro* mac, List{Quote} args, Allocator alloc)
+fn Environment* extend_macro_env(runtime::Macro* mac, List{Quote} args, Allocator alloc)
 {
     Environment* extended = environment::new_enclosed(mac.env, alloc);
     foreach (i, p: mac.parameters) {
@@ -74,7 +74,7 @@ fn void add_macro(Statement stmt, Environment* env, Allocator alloc)
 {
     LetStatement* let = (LetStatement*) stmt;
     ast::Macro* am = (ast::Macro*) let.value;
-    object::Macro* om = allocator::new(alloc, object::Macro, {
+    runtime::Macro* om = allocator::new(alloc, runtime::Macro, {
         .parameters = am.parameters,
         .env = env,
         .body = am.body,

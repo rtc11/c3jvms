@@ -28,7 +28,7 @@ fn void main()
 
         evaluator::define_macro(&program, macro_env, alloc);
         Node expanded = evaluator::expand_macro(&program, macro_env, alloc);
-        Object evaluated = evaluator::eval(expanded, macro_env, alloc);
+        RuntimeValue evaluated = evaluator::eval(expanded, macro_env, alloc);
 
         io::printfn("%s", ascii::colorize_str(string::tformat("%s", evaluated.inspect())));
     }

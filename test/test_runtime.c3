@@ -1,8 +1,8 @@
-module test::object;
+module test::runtime;
 
 import std::io;
 import std::collections::list;
-import object;
+import runtime;
 
 fn void string_hash_key() @test
 {
