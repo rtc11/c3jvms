@@ -28,10 +28,10 @@ fn RuntimeValue eval(Node node, Environment* env, Allocator alloc)
             return eval_program(((Program*) node), env, alloc);
         case ExpressionStatement: 
             return eval(((ExpressionStatement*) node).expression, env, alloc);
-        case ast::Int32: 
-            return allocator::new(alloc, runtime::Int32, { .value = ((ast::Int32*) node).value });
-        case LetStatement:
-            LetStatement* stmt = (LetStatement*) node;
+        case ast::IntegerLiteral: 
+            return allocator::new(alloc, runtime::Int32, { .value = ((ast::IntegerLiteral*) node).value });
+        case Let:
+            Let* stmt = (Let*) node;
             RuntimeValue i;
             if (stmt.value == null) {
                 i = allocator::new(alloc, runtime::Int32, { .value = 0 });
@@ -41,15 +41,15 @@ fn RuntimeValue eval(Node node, Environment* env, Allocator alloc)
             }
             env.set(stmt.name.value, i);
             return i;
-        case I32Stmt:
-            I32Stmt* stmt = (I32Stmt*) node;
+        case Integer:
+            Integer* stmt = (Integer*) node;
             RuntimeValue i = eval(stmt.value, env, alloc);
             if (i.is_err()) return i;
             if (i.type != runtime::Int32.typeid) return err("cannot assign value of %s to variable of %s", ascii::colorize(GOLD, i.name()), ascii::colorize(GOLD, "i32"));
             env.set(stmt.name.value, i);
             return i;
-        case StrStmt:
-            StrStmt* stmt = (StrStmt*) node;
+        case ast::String:
+            ast::String* stmt = (ast::String*) node;
             RuntimeValue i = eval(stmt.value, env, alloc);
             if (i.is_err()) return i;
             if (i.type != runtime::Str.typeid) return err("cannot assign value of %s to variable of %s", ascii::colorize(GOLD, i.name()), ascii::colorize(GOLD, "str"));
@@ -59,26 +59,26 @@ fn RuntimeValue eval(Node node, Environment* env, Allocator alloc)
             return eval_identifier((Identifier*) node, env);
         case ast::Bool: 
             return ((ast::Bool*) node).value ? &TRUE : &FALSE;
-        case PrefixExpression:
-            PrefixExpression* prefix_expr = (PrefixExpression*) node;
+        case Prefix:
+            Prefix* prefix_expr = (Prefix*) node;
             RuntimeValue right = eval(prefix_expr.right, env, alloc);
             if (right.is_err()) return right;
             return eval_expr_prefix(prefix_expr.operator, right, alloc);
-        case InfixExpression:
-            InfixExpression* infix_expr = (InfixExpression*) node;
+        case Infix:
+            Infix* infix_expr = (Infix*) node;
             RuntimeValue left = eval(infix_expr.left, env, alloc);
             if (left.is_err()) return left;
             RuntimeValue right = eval(infix_expr.right, env, alloc);
             if (right.is_err()) return right;
             return eval_infix_expr(infix_expr.operator, left, right, alloc);
-        case BlockStatement: 
-            return eval_stmt_block((BlockStatement*) node, env, alloc);
+        case Block: 
+            return eval_stmt_block((Block*) node, env, alloc);
         case If: 
             return eval_expr_if((If*) node, env, alloc);
-        case ReturnStatement:
-            RuntimeValue ret = eval(((ReturnStatement*) node).return_value, env, alloc);
+        case ast::Return:
+            RuntimeValue ret = eval(((ast::Return*) node).return_value, env, alloc);
             if (ret.is_err()) return ret;
-            return allocator::new(alloc, Return, { .value = ret });
+            return allocator::new(alloc, runtime::Return, { .value = ret });
         case ast::Fn:
             ast::Fn* fun = (ast::Fn*) node;
             return allocator::new(alloc, runtime::Fn, { 
@@ -89,8 +89,8 @@ fn RuntimeValue eval(Node node, Environment* env, Allocator alloc)
         case ast::Call:
             Call* call = (Call*) node;
             return eval_expr_call(call, env, alloc);
-        case StrLiteral:
-            StrLiteral* str = (StrLiteral*) node;
+        case StringLiteral:
+            StringLiteral* str = (StringLiteral*) node;
             return allocator::new(alloc, Str, { .value = str.value });
         case ast::Array:
             ast::Array* array = (ast::Array*) node;
@@ -124,8 +124,8 @@ fn RuntimeValue eval(Node node, Environment* env, Allocator alloc)
                 .instance_name = lit.struct_name.value,
                 .fields = fields,
             });
-        case StructDefinition:
-            StructDefinition* def = (StructDefinition*) node;
+        case Struct:
+            Struct* def = (Struct*) node;
             RuntimeValue i = allocator::new(alloc, StructDef, {
                 .struct_name = def.name.value,
                 .fields = def.fields,
@@ -180,7 +180,7 @@ fn RuntimeValue eval_program(Program* prog, Environment* env, Allocator alloc)
         res = eval(stmt, env, alloc);
         switch (res.type)
         {
-            case Return: return ((Return*) res).value;
+            case runtime::Return: return ((runtime::Return*) res).value;
             case Error: return res;
         }
     }
@@ -198,12 +198,12 @@ fn RuntimeValue eval_identifier(Identifier* ident, Environment* env)
     return err("unknown identifier %s", ascii::str(ident.value));
 }
 
-fn RuntimeValue eval_stmt_block(BlockStatement* block, Environment* env, Allocator alloc)
+fn RuntimeValue eval_stmt_block(Block* block, Environment* env, Allocator alloc)
 {
     RuntimeValue res;
     foreach (stmt: block.statements) {
         res = eval(stmt, env, alloc);
-        if (res != null && res.type == Return.typeid || res.type == Error.typeid) {
+        if (res != null && res.type == runtime::Return.typeid || res.type == Error.typeid) {
             return res;
         }
     }
@@ -399,7 +399,7 @@ fn Environment* extend_function_env(runtime::Fn* fun, List{RuntimeValue} args, A
 
 fn RuntimeValue unwrap_return_value(RuntimeValue obj)
 {
-    if (obj.type == Return.typeid) return ((Return*) obj).value;
+    if (obj.type == runtime::Return.typeid) return ((runtime::Return*) obj).value;
     return obj;
 }
 

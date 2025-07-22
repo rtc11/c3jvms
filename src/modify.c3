@@ -17,13 +17,13 @@ fn Node modify(Node node, Modifier modifier, Environment* env, Allocator alloc)
             ExpressionStatement* expr_stmt = (ExpressionStatement*) node;
             expr_stmt.expression = (Expression) modify(expr_stmt.expression, modifier, env, alloc);
 
-        case InfixExpression:
-            InfixExpression* infix = (InfixExpression*) node;
+        case Infix:
+            Infix* infix = (Infix*) node;
             infix.left = (Expression) modify(infix.left, modifier, env, alloc);
             infix.right = (Expression) modify(infix.right, modifier, env, alloc);
 
-        case PrefixExpression:
-            PrefixExpression* infix = (PrefixExpression*) node;
+        case Prefix:
+            Prefix* infix = (Prefix*) node;
             infix.right = (Expression) modify(infix.right, modifier, env, alloc);
 
         case Index:
@@ -34,33 +34,33 @@ fn Node modify(Node node, Modifier modifier, Environment* env, Allocator alloc)
         case If:
             If* expr = (If*) node;
             expr.condition = (Expression) modify(expr.condition, modifier, env, alloc);
-            expr.consequence = (BlockStatement*) modify(expr.consequence, modifier, env, alloc);
-            if (expr.alternative != null) expr.alternative = (BlockStatement*) modify(expr.alternative, modifier, env, alloc);
+            expr.consequence = (Block*) modify(expr.consequence, modifier, env, alloc);
+            if (expr.alternative != null) expr.alternative = (Block*) modify(expr.alternative, modifier, env, alloc);
 
-        case BlockStatement:
-            BlockStatement* expr = (BlockStatement*) node;
+        case Block:
+            Block* expr = (Block*) node;
             foreach(i, stmt: expr.statements) stmt = (Statement) modify(stmt, modifier, env, alloc);
 
-        case ReturnStatement:
-            ReturnStatement* expr = (ReturnStatement*) node;
+        case Return:
+            Return* expr = (Return*) node;
             expr.return_value = (Expression) modify(expr.return_value, modifier, env, alloc);
 
-        case LetStatement:
-            LetStatement* expr = (LetStatement*) node;
+        case Let:
+            Let* expr = (Let*) node;
             expr.value = (Expression) modify(expr.value, modifier, env, alloc);
 
-        case I32Stmt:
-            I32Stmt* expr = (I32Stmt*) node;
-            expr.value = (Int32*) modify(expr.value, modifier, env, alloc);
+        case Integer:
+            Integer* expr = (Integer*) node;
+            expr.value = (IntegerLiteral*) modify(expr.value, modifier, env, alloc);
 
-        case StrStmt:
-            StrStmt* expr = (StrStmt*) node;
-            expr.value = (StrLiteral*) modify(expr.value, modifier, env, alloc);
+        case ast::String:
+            ast::String* expr = (ast::String*) node;
+            expr.value = (StringLiteral*) modify(expr.value, modifier, env, alloc);
 
         case Fn:
             Fn* expr = (Fn*) node;
             foreach(i, param: expr.parameters) param = *(Identifier*) modify(&param, modifier, env, alloc);
-            expr.body = (BlockStatement*) modify(expr.body, modifier, env, alloc);
+            expr.body = (Block*) modify(expr.body, modifier, env, alloc);
 
         case Array:
             Array* expr = (Array*) node;

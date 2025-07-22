@@ -64,7 +64,7 @@ fn String Error.inspect(&self) @dynamic
 struct Fn (RuntimeValue)
 {
     List{Identifier} parameters;
-    BlockStatement* body;
+    Block* body;
     Environment* env;
 }
 fn String Fn.name(&self) @dynamic => "fn";
@@ -147,7 +147,7 @@ fn String Quote.inspect(&self) @dynamic => string::tformat("QUOTE(%s)", self.nod
 struct Macro (RuntimeValue)
 {
     List{Identifier} parameters;
-    BlockStatement* body;
+    Block* body;
     Environment* env;
 }
 fn String Macro.name(&self) @dynamic => "macro";

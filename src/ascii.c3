@@ -94,15 +94,15 @@ fn AsciiNode render(Expression expr)
     switch (expr.type) {
         case Identifier:
             label = ((Identifier*) expr).value;
-        case ast::Int32:
-            label = string::tformat("%d", ((ast::Int32*) expr).value);
-        case PrefixExpression:
-            label = ((PrefixExpression*) expr).operator;
-            right_expr = ((PrefixExpression*) expr).right;
-        case InfixExpression:
-            label = ((InfixExpression*) expr).operator;
-            left_expr = ((InfixExpression*) expr).left;
-            right_expr = ((InfixExpression*) expr).right;
+        case ast::IntegerLiteral:
+            label = string::tformat("%d", ((ast::IntegerLiteral*) expr).value);
+        case Prefix:
+            label = ((Prefix*) expr).operator;
+            right_expr = ((Prefix*) expr).right;
+        case Infix:
+            label = ((Infix*) expr).operator;
+            left_expr = ((Infix*) expr).left;
+            right_expr = ((Infix*) expr).right;
         default:
             label = "<unknown>";
     }
@@ -122,8 +122,8 @@ fn AsciiNode render(Expression expr)
         };
     }
 
-    if (expr.type == PrefixExpression.typeid) {
-        AsciiNode right = render(((PrefixExpression*)expr).right);
+    if (expr.type == Prefix.typeid) {
+        AsciiNode right = render(((Prefix*)expr).right);
         List{String} lines;
         lines.tinit();
         lines.push(label);

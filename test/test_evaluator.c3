@@ -131,12 +131,12 @@ fn void eval_struct() @test
     StructDef* def = (StructDef*) person;
     test::eq("Person", def.struct_name);
     test::eq(2, def.fields.len());
-    test::eq(StrStmt.typeid, def.fields[0].type);
-    StrStmt* name = (StrStmt*) def.fields[0];
+    test::eq(ast::String.typeid, def.fields[0].type);
+    ast::String* name = (ast::String*) def.fields[0];
     test::eq("name", name.name.value);
     test::eq(null, name.value);
-    test::eq(I32Stmt.typeid, def.fields[1].type);
-    I32Stmt* age = (I32Stmt*) def.fields[1];
+    test::eq(Integer.typeid, def.fields[1].type);
+    Integer* age = (Integer*) def.fields[1];
     test::eq("age", age.name.value);
     // test::eq(null, age.value);
 

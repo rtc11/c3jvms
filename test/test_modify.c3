@@ -21,7 +21,7 @@ fn void node() @test
         { let(one()), let(two()) },
         { fun(one()), fun(two())},
         { array(one(), one()), array(two(), two()) },
-        { i32((Int32*) one()), i32((Int32*)two()) },
+        { i32((IntegerLiteral*) one()), i32((IntegerLiteral*)two()) },
         { stra(), strb() },
         { str(stra()), str(strb()) },
     };
@@ -48,28 +48,28 @@ fn void hash() @test
     modify(hm, &turn_one_into_two, env, allocator::temp());
 
     hm.pairs.@each(; Expression k, Expression v) {
-        ast::Int32* key = (ast::Int32*) k;
+        ast::IntegerLiteral* key = (ast::IntegerLiteral*) k;
         test::eq(2, key.value);
-        ast::Int32* value = (ast::Int32*) v;
+        ast::IntegerLiteral* value = (ast::IntegerLiteral*) v;
         test::eq(2, value.value);
     };
 }
 
-fn Expression one() => allocator::new(allocator::temp(), ast::Int32, { .value = 1 });
-fn Expression two() => allocator::new(allocator::temp(), ast::Int32, { .value = 2 });
-fn StrLiteral* stra() => allocator::new(allocator::temp(), ast::StrLiteral, { .value = "a" });
-fn StrLiteral* strb() => allocator::new(allocator::temp(), ast::StrLiteral, { .value = "b" });
+fn Expression one() => allocator::new(allocator::temp(), ast::IntegerLiteral, { .value = 1 });
+fn Expression two() => allocator::new(allocator::temp(), ast::IntegerLiteral, { .value = 2 });
+fn StringLiteral* stra() => allocator::new(allocator::temp(), ast::StringLiteral, { .value = "a" });
+fn StringLiteral* strb() => allocator::new(allocator::temp(), ast::StringLiteral, { .value = "b" });
 
 fn Node turn_one_into_two(Node node, Environment* env, Allocator alloc)
 {
     switch(node.type) {
-        case ast::Int32:  
-            ast::Int32* integer = (ast::Int32*) node;
+        case ast::IntegerLiteral:  
+            ast::IntegerLiteral* integer = (ast::IntegerLiteral*) node;
             if (integer.value != 1) return node;
             integer.value = 2;
             return integer;
-        case ast::StrLiteral:  
-            ast::StrLiteral* str = (ast::StrLiteral*) node;
+        case ast::StringLiteral:  
+            ast::StringLiteral* str = (ast::StringLiteral*) node;
             if (str.value != "a") return node;
             str.value = "b";
             return str;
@@ -106,7 +106,7 @@ macro expressions(Expression...)
 
 fn Node infix(Expression left, String operator, Expression right)
 {
-    return allocator::new(allocator::temp(), InfixExpression, {
+    return allocator::new(allocator::temp(), Infix, {
         .left = left,
         .operator = operator,
         .right = right,
@@ -115,7 +115,7 @@ fn Node infix(Expression left, String operator, Expression right)
 
 fn Node prefix(String operator, Expression right)
 {
-    return allocator::new(allocator::temp(), PrefixExpression, {
+    return allocator::new(allocator::temp(), Prefix, {
         .operator = operator,
         .right = right,
     });
@@ -133,10 +133,10 @@ fn Node if_expr(Expression cond, Expression cons, Expression alt)
 {
     return allocator::new(allocator::temp(), If, {
         .condition = cond,
-        .consequence = allocator::new(allocator::temp(), BlockStatement, {
+        .consequence = allocator::new(allocator::temp(), Block, {
             .statements = statements(cons),
         }),
-        .alternative = allocator::new(allocator::temp(), BlockStatement, {
+        .alternative = allocator::new(allocator::temp(), Block, {
             .statements = statements(alt),
         }),
     });
@@ -144,28 +144,28 @@ fn Node if_expr(Expression cond, Expression cons, Expression alt)
 
 fn Node return_stmt(Expression value)
 {
-    return allocator::new(allocator::temp(), ReturnStatement, {
+    return allocator::new(allocator::temp(), Return, {
         .return_value = value,
     });
 }
 
 fn Node let(Expression value)
 {
-    return allocator::new(allocator::temp(), LetStatement, {
+    return allocator::new(allocator::temp(), Let, {
         .value = value,
     });
 }
 
-fn Node i32(Int32* value)
+fn Node i32(IntegerLiteral* value)
 {
-    return allocator::new(allocator::temp(), I32Stmt, {
+    return allocator::new(allocator::temp(), Integer, {
         .value = value,
     });
 }
 
-fn Node str(StrLiteral* value)
+fn Node str(StringLiteral* value)
 {
-    return allocator::new(allocator::temp(), StrStmt, {
+    return allocator::new(allocator::temp(), ast::String, {
         .value = value,
     });
 }
@@ -174,7 +174,7 @@ fn Node fun(Expression body)
 {
     return allocator::new(allocator::temp(), Fn, {
         .parameters = {},
-        .body = allocator::new(allocator::temp(), BlockStatement, {
+        .body = allocator::new(allocator::temp(), Block, {
             .statements = statements(body),
         }),
     });
@@ -202,23 +202,23 @@ fn void deep_eq(Node expected, Node actual)
             ExpressionStatement* exp = (ExpressionStatement*) expected;
             ExpressionStatement* act = (ExpressionStatement*) actual;
             deep_eq(exp.expression, act.expression);
-        case ast::Int32:
-            ast::Int32* exp = (ast::Int32*) expected;
-            ast::Int32* act = (ast::Int32*) actual;
+        case ast::IntegerLiteral:
+            ast::IntegerLiteral* exp = (ast::IntegerLiteral*) expected;
+            ast::IntegerLiteral* act = (ast::IntegerLiteral*) actual;
             test::eq(exp.value, act.value);
-        case ast::StrLiteral:
-            ast::StrLiteral* exp = (ast::StrLiteral*) expected;
-            ast::StrLiteral* act = (ast::StrLiteral*) actual;
+        case ast::StringLiteral:
+            ast::StringLiteral* exp = (ast::StringLiteral*) expected;
+            ast::StringLiteral* act = (ast::StringLiteral*) actual;
             test::eq(exp.value, act.value);
-        case InfixExpression:
-            InfixExpression* exp = (InfixExpression*) expected;
-            InfixExpression* act = (InfixExpression*) actual;
+        case Infix:
+            Infix* exp = (Infix*) expected;
+            Infix* act = (Infix*) actual;
             test::eq(exp.operator, act.operator);
             deep_eq(exp.left, act.left);
             deep_eq(exp.right, act.right);
-        case PrefixExpression:
-            PrefixExpression* exp = (PrefixExpression*) expected;
-            PrefixExpression* act = (PrefixExpression*) actual;
+        case Prefix:
+            Prefix* exp = (Prefix*) expected;
+            Prefix* act = (Prefix*) actual;
             test::eq(exp.operator, act.operator);
             deep_eq(exp.right, act.right);
         case Index:
@@ -232,26 +232,26 @@ fn void deep_eq(Node expected, Node actual)
             deep_eq(exp.condition, act.condition);
             deep_eq(exp.consequence, act.consequence);
             deep_eq(exp.alternative, act.alternative);
-        case BlockStatement:
-            BlockStatement* exp = (BlockStatement*) expected;
-            BlockStatement* act = (BlockStatement*) actual;
+        case Block:
+            Block* exp = (Block*) expected;
+            Block* act = (Block*) actual;
             test::eq(exp.statements.len(), act.statements.len());
             foreach(i, stmt: exp.statements) deep_eq(stmt, act.statements[i]);
-        case ReturnStatement:
-            ReturnStatement* exp = (ReturnStatement*) expected;
-            ReturnStatement* act = (ReturnStatement*) actual;
+        case Return:
+            Return* exp = (Return*) expected;
+            Return* act = (Return*) actual;
             deep_eq(exp.return_value, act.return_value);
-        case LetStatement:
-            LetStatement* exp = (LetStatement*) expected;
-            LetStatement* act = (LetStatement*) actual;
+        case Let:
+            Let* exp = (Let*) expected;
+            Let* act = (Let*) actual;
             deep_eq(exp.value, act.value);
-        case I32Stmt:
-            I32Stmt* exp = (I32Stmt*) expected;
-            I32Stmt* act = (I32Stmt*) actual;
+        case Integer:
+            Integer* exp = (Integer*) expected;
+            Integer* act = (Integer*) actual;
             deep_eq(exp.value, act.value);
-        case StrStmt:
-            StrStmt* exp = (StrStmt*) expected;
-            StrStmt* act = (StrStmt*) actual;
+        case ast::String:
+            ast::String* exp = (ast::String*) expected;
+            ast::String* act = (ast::String*) actual;
             deep_eq(exp.value, act.value);
         case Fn:
             Fn* exp = (Fn*) expected;

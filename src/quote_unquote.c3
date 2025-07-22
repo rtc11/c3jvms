@@ -40,13 +40,13 @@ fn Node convert_object_to_ast_node(RuntimeValue obj, Allocator alloc)
     {
         case runtime::Int32:
             runtime::Int32* i32 = (runtime::Int32*) obj;
-            return allocator::new(alloc, ast::Int32, {
+            return allocator::new(alloc, ast::IntegerLiteral, {
                 .token = { INT_LITERAL, string::tformat("%d", i32.value) },
                 .value = i32.value,
             });
         case runtime::Str:
             runtime::Str* str = (runtime::Str*) obj;
-            return allocator::new(alloc, ast::StrLiteral, {
+            return allocator::new(alloc, ast::StringLiteral, {
                 .token = { STR_LITERAL, string::tformat("%s", str.value) },
                 .value = str.value,
             });

@@ -49,7 +49,7 @@ fn void expression_bool() @test
 fn void expression_str() @test
 {
     Expression expr = expression(`"hello world";`);
-    StrLiteral* lit = (StrLiteral*) expr;
+    StringLiteral* lit = (StringLiteral*) expr;
     test::eq(lit.value, "hello world");
 }
 
@@ -80,7 +80,7 @@ fn void expression_dot() @test
     Call* call = (Call*) expression(`"foo".len()`);
     Dot* dot = (Dot*) call.function;
     identifier_eq(&dot.name, "len");
-    StrLiteral* lit = (StrLiteral*) dot.left;
+    StringLiteral* lit = (StringLiteral*) dot.left;
     test::eq("foo", lit.value);
 }
 
@@ -208,8 +208,8 @@ fn void expression_hash_str_keys() @test
     expected["three"] = 3;
 
     hash.pairs.@each(; Expression k, Expression v) {
-        StrLiteral* key = (StrLiteral*)k;
-        ast::Int32* value = (ast::Int32*)v;
+        StringLiteral* key = (StringLiteral*)k;
+        ast::IntegerLiteral* value = (ast::IntegerLiteral*)v;
         i32e_eq(value, expected[key.value]!!);
     };
 }
@@ -237,7 +237,7 @@ fn void expression_hash_expression_keys() @test
     expected["three"] = &hash_expression_keys_three;
 
     hash.pairs.@each(; Expression k, Expression v) {
-        StrLiteral* key = (StrLiteral*)k;
+        StringLiteral* key = (StringLiteral*)k;
         FunExpr test_expr = expected[key.value]!!;
         test_expr(v);
     };
@@ -256,7 +256,7 @@ fn void expression_macro() @test
 
 fn void statement_struct() @test
 {
-    StructDefinition* stmt = (StructDefinition*) statement(`
+    Struct* stmt = (Struct*) statement(`
         struct person {
             i32 id;
             str name;
@@ -265,16 +265,16 @@ fn void statement_struct() @test
     );
     test::eq("person", stmt.name.value);
     test::eq(3, stmt.fields.len());
-    test::eq(I32Stmt.typeid, stmt.fields[0].type);
-    I32Stmt* id = (I32Stmt*) stmt.fields[0];
+    test::eq(Integer.typeid, stmt.fields[0].type);
+    Integer* id = (Integer*) stmt.fields[0];
     test::eq("id", id.name.value);
     test::eq(null, id.value);
-    test::eq(StrStmt.typeid, stmt.fields[1].type);
-    StrStmt* name = (StrStmt*) stmt.fields[1];
+    test::eq(ast::String.typeid, stmt.fields[1].type);
+    ast::String* name = (ast::String*) stmt.fields[1];
     test::eq("name", name.name.value);
     test::eq(null, name.value);
-    test::eq(I32Stmt.typeid, stmt.fields[2].type);
-    I32Stmt* age = (I32Stmt*) stmt.fields[2];
+    test::eq(Integer.typeid, stmt.fields[2].type);
+    Integer* age = (Integer*) stmt.fields[2];
     test::eq("age", age.name.value);
     test::eq(null, age.value);
 }
@@ -291,14 +291,14 @@ fn void expression_struct() @test
     expr.field_values.@each(; Identifier key, Expression value) {
         switch (key.value) {
             case "id":
-                test::eq(Int32.typeid, value.type);
-                test::eq(1, ((Int32*) value).value);
+                test::eq(IntegerLiteral.typeid, value.type);
+                test::eq(1, ((IntegerLiteral*) value).value);
             case "name":
-                test::eq(StrLiteral.typeid, value.type);
-                test::eq("Bob", ((StrLiteral*) value).value);
+                test::eq(StringLiteral.typeid, value.type);
+                test::eq("Bob", ((StringLiteral*) value).value);
             case "age":
-                test::eq(Int32.typeid, value.type);
-                test::eq(32, ((Int32*) value).value);
+                test::eq(IntegerLiteral.typeid, value.type);
+                test::eq(32, ((IntegerLiteral*) value).value);
             default: 
                 test::eq("", "expected field missing");
         }
@@ -316,8 +316,8 @@ fn Statement statement(String input)
 
 macro let_eq(Statement stmt, String expect_name, expect_expr)
 {
-    test::eq(stmt.type, LetStatement.typeid);
-    LetStatement* let = (LetStatement*) stmt;
+    test::eq(stmt.type, Let.typeid);
+    Let* let = (Let*) stmt;
     test::eq(let.token_literal(), "let");
     test::eq(let.name.value, expect_name);
     expr_eq(let.value, expect_expr);
@@ -325,8 +325,8 @@ macro let_eq(Statement stmt, String expect_name, expect_expr)
 
 macro i32_eq(Statement stmt, String expect_name, expect_expr)
 {
-    test::eq(stmt.type, I32Stmt.typeid);
-    I32Stmt* i32 = (I32Stmt*) stmt;
+    test::eq(stmt.type, Integer.typeid);
+    Integer* i32 = (Integer*) stmt;
     test::eq(i32.token_literal(), "i32");
     test::eq(i32.name.value, expect_name);
     expr_eq(i32.value, expect_expr);
@@ -334,8 +334,8 @@ macro i32_eq(Statement stmt, String expect_name, expect_expr)
 
 macro str_eq(Statement stmt, String expect_name, expect_expr)
 {
-    test::eq(stmt.type, StrStmt.typeid);
-    StrStmt* str = (StrStmt*) stmt;
+    test::eq(stmt.type, ast::String.typeid);
+    ast::String* str = (ast::String*) stmt;
     test::eq(str.token_literal(), "str");
     test::eq(str.name.value, expect_name);
     expr_eq(str.value, expect_expr);
@@ -343,8 +343,8 @@ macro str_eq(Statement stmt, String expect_name, expect_expr)
 
 macro return_eq(Statement stmt, expect_expr)
 {
-    test::eq(stmt.type, ReturnStatement.typeid);
-    ReturnStatement* ret = (ReturnStatement*) stmt;
+    test::eq(stmt.type, Return.typeid);
+    Return* ret = (Return*) stmt;
     test::eq(ret.token_literal(), "return");
     expr_eq(ret.return_value, expect_expr);
 }
@@ -370,14 +370,14 @@ macro fn_eq(Expression expr, ...)
 
 macro test_expression_prefix(Expression expr, operator, right)
 {
-    PrefixExpression* prefix_expr = (PrefixExpression*) expr;
+    Prefix* prefix_expr = (Prefix*) expr;
     test::eq(prefix_expr.operator, operator);
     expr_eq(prefix_expr.right, right);
 }
 
 macro test_expression_infix(Expression expr, left, operator, right)
 {
-    InfixExpression* infix_expr = (InfixExpression*) expr;
+    Infix* infix_expr = (Infix*) expr;
     expr_eq(infix_expr.left, left);
     test::eq(infix_expr.operator, operator);
     expr_eq(infix_expr.right, right);
@@ -403,7 +403,7 @@ fn void identifier_eq(Expression expr, String expected)
 
 fn void i32e_eq(Expression expr, int expected)
 {
-    ast::Int32* int_lit= (ast::Int32*) expr;
+    ast::IntegerLiteral* int_lit= (ast::IntegerLiteral*) expr;
     test::eq(int_lit.value, expected);
     test::eq(int_lit.token_literal(), string::tformat("%s", expected));
 }

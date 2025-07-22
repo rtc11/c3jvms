@@ -63,16 +63,16 @@ fn Environment* extend_macro_env(runtime::Macro* mac, List{Quote} args, Allocato
 fn bool is_macro(Statement node)
 {
     switch (node.type) {
-        case LetStatement: return ((LetStatement*) node).value.type == ast::Macro.typeid;
-        case StrStmt: return ((StrStmt*) node).value.type == ast::Macro.typeid;
-        case I32Stmt: return ((I32Stmt*) node).value.type == ast::Macro.typeid;
+        case Let: return ((Let*) node).value.type == ast::Macro.typeid;
+        case ast::String: return ((ast::String*) node).value.type == ast::Macro.typeid;
+        case Integer: return ((Integer*) node).value.type == ast::Macro.typeid;
     }
     return false;
 }
 
 fn void add_macro(Statement stmt, Environment* env, Allocator alloc)
 {
-    LetStatement* let = (LetStatement*) stmt;
+    Let* let = (Let*) stmt;
     ast::Macro* am = (ast::Macro*) let.value;
     runtime::Macro* om = allocator::new(alloc, runtime::Macro, {
         .parameters = am.parameters,

@@ -12,7 +12,7 @@ fn void to_format() @test
         .token = { IDENTIFIER, "another" },
         .value = "another",
     }); 
-    LetStatement* stmt = allocator::new(allocator::temp(), LetStatement, { 
+    Let* stmt = allocator::new(allocator::temp(), Let, { 
         .token = { LET, "let" },
         .name = { 
             .token = { IDENTIFIER, "my" },

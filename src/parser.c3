@@ -111,19 +111,19 @@ fn Program Parser.parse_program(&self)
     while (self.cur.type != EOF) {
         switch (self.cur.type) {
             case I32:
-                I32Stmt* stmt = self.parse_i32_stmt();
+                Integer* stmt = self.parse_i32_stmt();
                 if (stmt != null) stmts.push(stmt);
             case STR:
-                StrStmt* stmt = self.parse_str_stmt();
+                ast::String* stmt = self.parse_str_stmt();
                 if (stmt != null) stmts.push(stmt);
             case LET: 
-                LetStatement* stmt = self.parse_let_stmt();
+                Let* stmt = self.parse_let_stmt();
                 if (stmt != null) stmts.push(stmt);
             case STRUCT:
-                StructDefinition* stmt = self.parse_struct_definition();
+                Struct* stmt = self.parse_struct_definition();
                 if (stmt != null) stmts.push(stmt);
             case RETURN:
-                ReturnStatement* stmt = self.parse_return_stmt();
+                Return* stmt = self.parse_return_stmt();
                 if (stmt != null) stmts.push(stmt);
             default:
                 ExpressionStatement* stmt = self.parse_expression_stmt();
@@ -134,10 +134,10 @@ fn Program Parser.parse_program(&self)
     return { stmts };
 }
 
-fn LetStatement* Parser.parse_let_stmt(&self)
+fn Let* Parser.parse_let_stmt(&self)
 {
     if (DEBUG) io::printfn("parse_let_stmt");
-    LetStatement* stmt = allocator::new(self.allocator, LetStatement, { .token = self.cur });
+    Let* stmt = allocator::new(self.allocator, Let, { .token = self.cur });
     if (!self.expect_peek(IDENTIFIER)) return null;
     stmt.name = { self.cur, self.cur.literal };
     switch (self.peek.type) {
@@ -156,10 +156,10 @@ fn LetStatement* Parser.parse_let_stmt(&self)
     return stmt;
 }
 
-fn I32Stmt* Parser.parse_i32_stmt(&self)
+fn Integer* Parser.parse_i32_stmt(&self)
 {
     if (DEBUG) io::printfn("parse_i32_stmt");
-    I32Stmt* stmt = allocator::new(self.allocator, I32Stmt, { .token = self.cur });
+    Integer* stmt = allocator::new(self.allocator, Integer, { .token = self.cur });
     if (!self.expect_peek(IDENTIFIER)) return null;
     stmt.name = { self.cur, self.cur.literal };
     switch (self.peek.type) {
@@ -178,10 +178,10 @@ fn I32Stmt* Parser.parse_i32_stmt(&self)
     return stmt;
 }
 
-fn StrStmt* Parser.parse_str_stmt(&self)
+fn ast::String* Parser.parse_str_stmt(&self)
 {
     if (DEBUG) io::printfn("parse_str_stmt");
-    StrStmt* stmt = allocator::new(self.allocator, StrStmt, { .token = self.cur });
+    ast::String* stmt = allocator::new(self.allocator, ast::String, { .token = self.cur });
     if (!self.expect_peek(IDENTIFIER)) return null;
     stmt.name = { self.cur, self.cur.literal };
     switch (self.peek.type) {
@@ -200,7 +200,7 @@ fn StrStmt* Parser.parse_str_stmt(&self)
     return stmt;
 }
 
-fn StructDefinition* Parser.parse_struct_definition(&self)
+fn Struct* Parser.parse_struct_definition(&self)
 {
     Token token = self.cur;
     if(!self.expect_peek(IDENTIFIER)) return null;
@@ -215,17 +215,17 @@ fn StructDefinition* Parser.parse_struct_definition(&self)
         self.next_token();
         switch (self.cur.type) {
             case I32: 
-                I32Stmt* stmt = self.parse_i32_stmt();
+                Integer* stmt = self.parse_i32_stmt();
                 if (stmt != null) fields.push(stmt);
             case STR: 
-                StrStmt* stmt = self.parse_str_stmt();
+                ast::String* stmt = self.parse_str_stmt();
                 if (stmt != null) fields.push(stmt);
             default: 
                 io::printfn("%s not valid in struct definitions", self.cur.literal);
         }
     }
     if (!self.expect_peek(R_BRACE)) return null;
-    StructDefinition* stmt = allocator::new(self.allocator, StructDefinition, {
+    Struct* stmt = allocator::new(self.allocator, Struct, {
         .token = token,
         .name = *name,
         .fields = fields,
@@ -262,9 +262,9 @@ fn StructLiteral* Parser.parse_struct_literal(&self, Identifier* struct_name)
     return lit;
 }
 
-fn ReturnStatement* Parser.parse_return_stmt(&self)
+fn Return* Parser.parse_return_stmt(&self)
 {
-    ReturnStatement* stmt = allocator::new(self.allocator, ReturnStatement, { .token = self.cur });
+    Return* stmt = allocator::new(self.allocator, Return, { .token = self.cur });
     self.next_token();
     stmt.return_value = self.parse_expression(LOWEST);
     if (self.peek_token_is(SEMICOLON)) self.next_token();
@@ -313,7 +313,7 @@ fn Expression Parser.parse_identifier(&self)
 
 fn Expression Parser.parse_int_literal(&self)
 {
-    ast::Int32* i32 = allocator::new(self.allocator, ast::Int32, {
+    ast::IntegerLiteral* i32 = allocator::new(self.allocator, ast::IntegerLiteral, {
         .token = self.cur, 
         .value = self.cur.literal.to_int()!!,
     });
@@ -331,7 +331,7 @@ fn Expression Parser.parse_bool(&self)
 
 fn Expression Parser.parse_prefix_expression(&self)
 {
-    PrefixExpression* prefix = allocator::new(self.allocator, PrefixExpression, {
+    Prefix* prefix = allocator::new(self.allocator, Prefix, {
         .token = self.cur, 
         .operator = self.cur.literal,
     });
@@ -343,7 +343,7 @@ fn Expression Parser.parse_prefix_expression(&self)
 fn Expression Parser.parse_infix_expression(&self, Expression left_expr)
 {
     if (DEBUG) io::printfn("parse_infix_expression");
-    InfixExpression* infix = allocator::new(self.allocator, InfixExpression, {
+    Infix* infix = allocator::new(self.allocator, Infix, {
         .token = self.cur, 
         .operator = self.cur.literal,
         .left = left_expr,
@@ -423,7 +423,7 @@ fn Expression Parser.parse_fn_expression(&self)
 
 fn Expression Parser.parse_str_literal(&self)
 {
-    StrLiteral* expr = allocator::new(self.allocator, StrLiteral, {
+    StringLiteral* expr = allocator::new(self.allocator, StringLiteral, {
         .token = self.cur,
         .value = self.cur.literal,
     });
@@ -520,7 +520,7 @@ fn List{Identifier} Parser.parse_fn_parameters(&self)
     return idents;
 }
 
-fn BlockStatement* Parser.parse_block_statement(&self)
+fn Block* Parser.parse_block_statement(&self)
 {
     Token token = self.cur;
     List{Statement} stmts;
@@ -530,16 +530,16 @@ fn BlockStatement* Parser.parse_block_statement(&self)
     while(!self.cur_token_is(R_BRACE) && !self.cur_token_is(EOF)) {
         switch (self.cur.type) {
             case I32: 
-                I32Stmt* stmt = self.parse_i32_stmt();
+                Integer* stmt = self.parse_i32_stmt();
                 if (stmt != null) stmts.push(stmt);
             case STR: 
-                StrStmt* stmt = self.parse_str_stmt();
+                ast::String* stmt = self.parse_str_stmt();
                 if (stmt != null) stmts.push(stmt);
             case LET: 
-                LetStatement* stmt = self.parse_let_stmt();
+                Let* stmt = self.parse_let_stmt();
                 if (stmt != null) stmts.push(stmt);
             case RETURN:
-                ReturnStatement* stmt = self.parse_return_stmt();
+                Return* stmt = self.parse_return_stmt();
                 if (stmt != null) stmts.push(stmt);
             default:
                 ExpressionStatement* stmt = self.parse_expression_stmt();
@@ -548,7 +548,7 @@ fn BlockStatement* Parser.parse_block_statement(&self)
         self.next_token();
     }
 
-    return allocator::new(self.allocator, BlockStatement, {
+    return allocator::new(self.allocator, Block, {
         .token = token,
         .statements = stmts,
     });
