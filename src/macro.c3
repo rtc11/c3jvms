@@ -64,8 +64,6 @@ fn bool is_macro(Statement node)
 {
     switch (node.type) {
         case Let: return ((Let*) node).value.type == ast::Macro.typeid;
-        case ast::String: return ((ast::String*) node).value.type == ast::Macro.typeid;
-        case Integer: return ((Integer*) node).value.type == ast::Macro.typeid;
     }
     return false;
 }

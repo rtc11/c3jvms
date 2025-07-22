@@ -49,14 +49,6 @@ fn Node modify(Node node, Modifier modifier, Environment* env, Allocator alloc)
             Let* expr = (Let*) node;
             expr.value = (Expression) modify(expr.value, modifier, env, alloc);
 
-        case Integer:
-            Integer* expr = (Integer*) node;
-            expr.value = (IntegerLiteral*) modify(expr.value, modifier, env, alloc);
-
-        case ast::String:
-            ast::String* expr = (ast::String*) node;
-            expr.value = (StringLiteral*) modify(expr.value, modifier, env, alloc);
-
         case Fn:
             Fn* expr = (Fn*) node;
             foreach(i, param: expr.parameters) param = *(Identifier*) modify(&param, modifier, env, alloc);

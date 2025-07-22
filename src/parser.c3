@@ -111,13 +111,13 @@ fn Program Parser.parse_program(&self)
     while (self.cur.type != EOF) {
         switch (self.cur.type) {
             case I32:
-                Integer* stmt = self.parse_i32_stmt();
+                Let* stmt = self.parse_typed_let(INTEGER);
                 if (stmt != null) stmts.push(stmt);
             case STR:
-                ast::String* stmt = self.parse_str_stmt();
+                Let* stmt = self.parse_typed_let(STRING);
                 if (stmt != null) stmts.push(stmt);
             case LET: 
-                Let* stmt = self.parse_let_stmt();
+                Let* stmt = self.parse_let();
                 if (stmt != null) stmts.push(stmt);
             case STRUCT:
                 Struct* stmt = self.parse_struct_definition();
@@ -134,9 +134,9 @@ fn Program Parser.parse_program(&self)
     return { stmts };
 }
 
-fn Let* Parser.parse_let_stmt(&self)
+fn Let* Parser.parse_let(&self)
 {
-    if (DEBUG) io::printfn("parse_let_stmt");
+    if (DEBUG) io::printfn("parse_let");
     Let* stmt = allocator::new(self.allocator, Let, { .token = self.cur });
     if (!self.expect_peek(IDENTIFIER)) return null;
     stmt.name = { self.cur, self.cur.literal };
@@ -152,52 +152,32 @@ fn Let* Parser.parse_let_stmt(&self)
             self.peek_error(ASSIGN);
             self.peek_error(SEMICOLON);
     }
-    if (DEBUG) io::printfn("parse_let_stmt OK");
+    if (DEBUG) io::printfn("parse_let OK");
     return stmt;
 }
 
-fn Integer* Parser.parse_i32_stmt(&self)
+fn Let* Parser.parse_typed_let(&self, TypeAnnotation type)
 {
-    if (DEBUG) io::printfn("parse_i32_stmt");
-    Integer* stmt = allocator::new(self.allocator, Integer, { .token = self.cur });
-    if (!self.expect_peek(IDENTIFIER)) return null;
-    stmt.name = { self.cur, self.cur.literal };
-    switch (self.peek.type) {
-        case ASSIGN:
-            self.next_token(); // consume =
-            self.next_token(); // advance to expression
-            stmt.value = self.parse_expression(LOWEST);
-            if (self.peek_token_is(SEMICOLON)) self.next_token();
-        case SEMICOLON:
-            self.next_token(); // consume ;
-        default:
-            self.peek_error(ASSIGN);
-            self.peek_error(SEMICOLON);
+    Token token = self.cur;
+    self.next_token(); // move to identifier
+    if (self.cur.type != IDENTIFIER) {
+        self.errors.push("expected identifier after type annotation");
+        return null;
     }
-    if (DEBUG) io::printfn("parse_i32_stmt OK");
-    return stmt;
-}
-
-fn ast::String* Parser.parse_str_stmt(&self)
-{
-    if (DEBUG) io::printfn("parse_str_stmt");
-    ast::String* stmt = allocator::new(self.allocator, ast::String, { .token = self.cur });
-    if (!self.expect_peek(IDENTIFIER)) return null;
-    stmt.name = { self.cur, self.cur.literal };
-    switch (self.peek.type) {
-        case ASSIGN:
-            self.next_token(); // consume =
-            self.next_token(); // advance to expression
-            stmt.value = self.parse_expression(LOWEST);
-            if (self.peek_token_is(SEMICOLON)) self.next_token();
-        case SEMICOLON:
-            self.next_token(); // consume ;
-        default:
-            self.peek_error(ASSIGN);
-            self.peek_error(SEMICOLON);
+    Identifier* name = (Identifier*) self.parse_identifier();
+    Expression value;
+    if (self.peek_token_is(ASSIGN)) {
+        self.next_token(); // consume =
+        self.next_token(); // move to value expression
+        value = self.parse_expression(LOWEST);
     }
-    if (DEBUG) io::printfn("parse_str_stmt OK");
-    return stmt;
+    if (self.peek_token_is(SEMICOLON)) self.next_token();
+    return allocator::new(self.allocator, Let, {
+        .token = token,
+        .type = type,
+        .name = *name,
+        .value = value,
+    });
 }
 
 fn Struct* Parser.parse_struct_definition(&self)
@@ -215,11 +195,13 @@ fn Struct* Parser.parse_struct_definition(&self)
         self.next_token();
         switch (self.cur.type) {
             case I32: 
-                Integer* stmt = self.parse_i32_stmt();
+                Let* stmt = self.parse_typed_let(INTEGER);
                 if (stmt != null) fields.push(stmt);
             case STR: 
-                ast::String* stmt = self.parse_str_stmt();
+                Let* stmt = self.parse_typed_let(STRING);
                 if (stmt != null) fields.push(stmt);
+            case SEMICOLON:
+                break; // skip semicolons between fields
             default: 
                 io::printfn("%s not valid in struct definitions", self.cur.literal);
         }
@@ -530,13 +512,13 @@ fn Block* Parser.parse_block_statement(&self)
     while(!self.cur_token_is(R_BRACE) && !self.cur_token_is(EOF)) {
         switch (self.cur.type) {
             case I32: 
-                Integer* stmt = self.parse_i32_stmt();
+                Let* stmt = self.parse_typed_let(INTEGER);
                 if (stmt != null) stmts.push(stmt);
             case STR: 
-                ast::String* stmt = self.parse_str_stmt();
+                Let* stmt = self.parse_typed_let(STRING);
                 if (stmt != null) stmts.push(stmt);
             case LET: 
-                Let* stmt = self.parse_let_stmt();
+                Let* stmt = self.parse_let();
                 if (stmt != null) stmts.push(stmt);
             case RETURN:
                 Return* stmt = self.parse_return_stmt();

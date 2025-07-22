@@ -44,6 +44,7 @@ fn bool Identifier.equals(self, Identifier other) @operator(==) => self.value ==
 struct Let (Statement)
 {
     Token token;
+    TypeAnnotation type;
     Identifier name;
     Expression value;
 }
@@ -53,15 +54,14 @@ fn usz? Let.to_format(&self, Formatter* f) @dynamic {
     return f.printf("%s %s = %s;", self.token_literal(), self.name, self.value);
 }
 
-struct Integer (Statement)
+enum TypeAnnotation
 {
-    Token token;
-    Identifier name;
-    Expression value;
-}
-fn String Integer.token_literal(&self) @dynamic => self.token.literal;
-fn usz? Integer.to_format(&self, Formatter* f) @dynamic {
-    return f.printf("%s %s = %s;", self.token_literal(), self.name, self.value);
+    INTEGER,
+    STRING,
+    LET,
+    // IDENTIFIER, // e.g. 'User' or 'Person' 
+    // ARRAY,
+    // FUNCTION,
 }
 
 struct Return (Statement)
@@ -191,17 +191,6 @@ fn usz? Call.to_format(&self, Formatter* f) @dynamic {
     out += f.printf("%s", self.function)!;
     out += f.printf("(%s)", string::join(allocator::temp(), args, ", "))!;
     return out;
-}
-
-struct String (Statement)
-{
-    Token token;
-    Identifier name;
-    Expression value;
-}
-fn String ast::String.token_literal(&self) @dynamic => self.token.literal;
-fn usz? ast::String.to_format(&self, Formatter* f) @dynamic {
-    return f.printf("%s %s = %s;", self.token_literal(), self.name, self.value);
 }
 
 struct StringLiteral (Expression)

@@ -9,9 +9,9 @@ alias StrTuple = String[2];
 
 fn void statement_let() @test
 {
-    let_eq(statement("let num = 10;"), "num", 10);
-    let_eq(statement("let num;"), "num", null);
-    // let_eq(statement("let num; num = 10;"), "num", 10);
+    i32_eq(statement("let num = 10;"), "num", 10, "let");
+    let_eq(statement("let num;"), "num", null, INTEGER); // 0 initialized, and therefore an i32
+    // i32_eq(statement("i32 num; num = 10;"), "num", 10);
 }
 
 fn void statement_i32() @test
@@ -265,16 +265,19 @@ fn void statement_struct() @test
     );
     test::eq("person", stmt.name.value);
     test::eq(3, stmt.fields.len());
-    test::eq(Integer.typeid, stmt.fields[0].type);
-    Integer* id = (Integer*) stmt.fields[0];
+    test::eq(Let.typeid, stmt.fields[0].type);
+    Let* id = (Let*) stmt.fields[0];
+    test::eq(TypeAnnotation.INTEGER, id.type);
     test::eq("id", id.name.value);
     test::eq(null, id.value);
-    test::eq(ast::String.typeid, stmt.fields[1].type);
-    ast::String* name = (ast::String*) stmt.fields[1];
+    test::eq(Let.typeid, stmt.fields[1].type);
+    Let* name = (Let*) stmt.fields[1];
+    test::eq(TypeAnnotation.STRING, name.type);
     test::eq("name", name.name.value);
     test::eq(null, name.value);
-    test::eq(Integer.typeid, stmt.fields[2].type);
-    Integer* age = (Integer*) stmt.fields[2];
+    test::eq(Let.typeid, stmt.fields[2].type);
+    Let* age = (Let*) stmt.fields[2];
+    test::eq(TypeAnnotation.INTEGER, age.type);
     test::eq("age", age.name.value);
     test::eq(null, age.value);
 }
@@ -314,32 +317,18 @@ fn Statement statement(String input)
     return prog.statements[0];
 }
 
-macro let_eq(Statement stmt, String expect_name, expect_expr)
+macro let_eq(Statement stmt, String expect_name, expect_expr, TypeAnnotation type = LET, String token_literal = "let")
 {
     test::eq(stmt.type, Let.typeid);
     Let* let = (Let*) stmt;
-    test::eq(let.token_literal(), "let");
+    test::eq(type, let.type);
+    test::eq(let.token_literal(), token_literal);
     test::eq(let.name.value, expect_name);
     expr_eq(let.value, expect_expr);
 }
 
-macro i32_eq(Statement stmt, String expect_name, expect_expr)
-{
-    test::eq(stmt.type, Integer.typeid);
-    Integer* i32 = (Integer*) stmt;
-    test::eq(i32.token_literal(), "i32");
-    test::eq(i32.name.value, expect_name);
-    expr_eq(i32.value, expect_expr);
-}
-
-macro str_eq(Statement stmt, String expect_name, expect_expr)
-{
-    test::eq(stmt.type, ast::String.typeid);
-    ast::String* str = (ast::String*) stmt;
-    test::eq(str.token_literal(), "str");
-    test::eq(str.name.value, expect_name);
-    expr_eq(str.value, expect_expr);
-}
+macro str_eq(Statement stmt, String expect_name, expect_expr, String token_literal = "str") => let_eq(stmt, expect_name, expect_expr, STRING, token_literal);
+macro i32_eq(Statement stmt, String expect_name, expect_expr, String token_literal = "i32") => let_eq(stmt, expect_name, expect_expr, INTEGER, token_literal);
 
 macro return_eq(Statement stmt, expect_expr)
 {

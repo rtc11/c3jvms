@@ -33,26 +33,31 @@ fn RuntimeValue eval(Node node, Environment* env, Allocator alloc)
         case Let:
             Let* stmt = (Let*) node;
             RuntimeValue i;
-            if (stmt.value == null) {
-                i = allocator::new(alloc, runtime::Int32, { .value = 0 });
-            } else {
-                i = eval(stmt.value, env, alloc);
-                if (i.is_err()) return i;
+            switch (stmt.type) {
+                case INTEGER:
+                    if (stmt.value == null) {
+                        i = allocator::new(alloc, runtime::Int32, { .value = 0 });
+                    } else {
+                        i = eval(stmt.value, env, alloc);
+                        if (i.is_err()) return i;
+                        // if (i.type != runtime::Int32.typeid) return err("cannot assign value of %s to variable of %s", ascii::colorize(GOLD, i.name()), ascii::colorize(GOLD, "i32"));
+                    }
+                case LET:
+                    if (stmt.value == null) {
+                        i = allocator::new(alloc, runtime::Int32, { .value = 0 });
+                    } else { 
+                        i = eval(stmt.value, env, alloc);
+                        if (i.is_err()) return i;
+                    }
+                case STRING:
+                    if (stmt.value == null) {
+                        i = allocator::new(alloc, runtime::Str, { .value = "" });
+                    } else {
+                        i = eval(stmt.value, env, alloc);
+                        if (i.is_err()) return i;
+                        // if (i.type != runtime::Str.typeid) return err("cannot assign value of %s to variable of %s", ascii::colorize(GOLD, i.name()), ascii::colorize(GOLD, "str")); 
+                    }
             }
-            env.set(stmt.name.value, i);
-            return i;
-        case Integer:
-            Integer* stmt = (Integer*) node;
-            RuntimeValue i = eval(stmt.value, env, alloc);
-            if (i.is_err()) return i;
-            if (i.type != runtime::Int32.typeid) return err("cannot assign value of %s to variable of %s", ascii::colorize(GOLD, i.name()), ascii::colorize(GOLD, "i32"));
-            env.set(stmt.name.value, i);
-            return i;
-        case ast::String:
-            ast::String* stmt = (ast::String*) node;
-            RuntimeValue i = eval(stmt.value, env, alloc);
-            if (i.is_err()) return i;
-            if (i.type != runtime::Str.typeid) return err("cannot assign value of %s to variable of %s", ascii::colorize(GOLD, i.name()), ascii::colorize(GOLD, "str"));
             env.set(stmt.name.value, i);
             return i;
         case Identifier:

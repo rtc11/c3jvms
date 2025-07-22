@@ -149,26 +149,16 @@ fn Node return_stmt(Expression value)
     });
 }
 
-fn Node let(Expression value)
+fn Node let(Expression value, TypeAnnotation type = LET)
 {
     return allocator::new(allocator::temp(), Let, {
         .value = value,
+        .type = type,
     });
 }
 
-fn Node i32(IntegerLiteral* value)
-{
-    return allocator::new(allocator::temp(), Integer, {
-        .value = value,
-    });
-}
-
-fn Node str(StringLiteral* value)
-{
-    return allocator::new(allocator::temp(), ast::String, {
-        .value = value,
-    });
-}
+fn Node i32(IntegerLiteral* value) => let(value, INTEGER);
+fn Node str(StringLiteral* value) => let(value, STRING);
 
 fn Node fun(Expression body)
 {
@@ -244,14 +234,6 @@ fn void deep_eq(Node expected, Node actual)
         case Let:
             Let* exp = (Let*) expected;
             Let* act = (Let*) actual;
-            deep_eq(exp.value, act.value);
-        case Integer:
-            Integer* exp = (Integer*) expected;
-            Integer* act = (Integer*) actual;
-            deep_eq(exp.value, act.value);
-        case ast::String:
-            ast::String* exp = (ast::String*) expected;
-            ast::String* act = (ast::String*) actual;
             deep_eq(exp.value, act.value);
         case Fn:
             Fn* exp = (Fn*) expected;
