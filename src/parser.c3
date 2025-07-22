@@ -34,16 +34,16 @@ fn Parser new(Lexer lexer, Allocator allocator)
 
     HashMap{TokenType, Presendence} presendences;
     presendences.init(allocator);
-    presendences[EQ] = EQUALS;
-    presendences[NEQ] = EQUALS;
-    presendences[LT] = LESS_GREATER;
-    presendences[GT] = LESS_GREATER;
-    presendences[PLUS] = SUM;
-    presendences[MINUS] = SUM;
-    presendences[SLASH] = PRODUCT;
-    presendences[ASTERISK] = PRODUCT;
-    presendences[DOT] = DOT;
-    presendences[L_PAREN] = CALL;
+    presendences[EQ]        = EQUALS;
+    presendences[NEQ]       = EQUALS;
+    presendences[LT]        = LESS_GREATER;
+    presendences[GT]        = LESS_GREATER;
+    presendences[PLUS]      = SUM;
+    presendences[MINUS]     = SUM;
+    presendences[SLASH]     = PRODUCT;
+    presendences[ASTERISK]  = PRODUCT;
+    presendences[DOT]       = DOT;
+    presendences[L_PAREN]   = CALL;
     presendences[L_BRACKET] = INDEX;
 
     Parser p = { 
@@ -57,32 +57,32 @@ fn Parser new(Lexer lexer, Allocator allocator)
     p.next_token();
     p.next_token();
 
-    p.register_prefix(IDENTIFIER, (ParsePrefix)&Parser.parse_identifier);
-    p.register_prefix(INT_LITERAL, (ParsePrefix)&Parser.parse_int_literal);
-    p.register_prefix(BANG, (ParsePrefix)&Parser.parse_prefix_expression);
-    p.register_prefix(MINUS, (ParsePrefix)&Parser.parse_prefix_expression);
-    p.register_prefix(TRUE, (ParsePrefix)&Parser.parse_bool);
-    p.register_prefix(FALSE, (ParsePrefix)&Parser.parse_bool);
-    p.register_prefix(L_PAREN, (ParsePrefix)&Parser.parse_grouped_expression);
-    p.register_prefix(IF, (ParsePrefix)&Parser.parse_if_expression);
-    p.register_prefix(ELSE, (ParsePrefix)&Parser.parse_if_expression);
-    p.register_prefix(FN, (ParsePrefix)&Parser.parse_fn_expression);
-    p.register_prefix(STR_LITERAL, (ParsePrefix)&Parser.parse_str_literal);
-    p.register_prefix(L_BRACKET, (ParsePrefix)&Parser.parse_array_literal);
-    p.register_prefix(L_BRACE, (ParsePrefix)&Parser.parse_hash_literal);
-    p.register_prefix(MACRO, (ParsePrefix)&Parser.parse_macro_literal);
+    p.register_prefix(IDENTIFIER,  (ParsePrefix) &Parser.parse_identifier);
+    p.register_prefix(INT_LITERAL, (ParsePrefix) &Parser.parse_int_literal);
+    p.register_prefix(BANG,        (ParsePrefix) &Parser.parse_prefix_expression);
+    p.register_prefix(MINUS,       (ParsePrefix) &Parser.parse_prefix_expression);
+    p.register_prefix(TRUE,        (ParsePrefix) &Parser.parse_bool);
+    p.register_prefix(FALSE,       (ParsePrefix) &Parser.parse_bool);
+    p.register_prefix(L_PAREN,     (ParsePrefix) &Parser.parse_grouped_expression);
+    p.register_prefix(IF,          (ParsePrefix) &Parser.parse_if_expression);
+    p.register_prefix(ELSE,        (ParsePrefix) &Parser.parse_if_expression);
+    p.register_prefix(FN,          (ParsePrefix) &Parser.parse_fn_expression);
+    p.register_prefix(STR_LITERAL, (ParsePrefix) &Parser.parse_str_literal);
+    p.register_prefix(L_BRACKET,   (ParsePrefix) &Parser.parse_array_literal);
+    p.register_prefix(L_BRACE,     (ParsePrefix) &Parser.parse_hash_literal);
+    p.register_prefix(MACRO,       (ParsePrefix) &Parser.parse_macro_literal);
 
-    p.register_infix(PLUS, (ParseInfix)&Parser.parse_infix_expression);
-    p.register_infix(MINUS, (ParseInfix)&Parser.parse_infix_expression);
-    p.register_infix(SLASH, (ParseInfix)&Parser.parse_infix_expression);
-    p.register_infix(ASTERISK, (ParseInfix)&Parser.parse_infix_expression);
-    p.register_infix(EQ, (ParseInfix)&Parser.parse_infix_expression);
-    p.register_infix(NEQ, (ParseInfix)&Parser.parse_infix_expression);
-    p.register_infix(LT, (ParseInfix)&Parser.parse_infix_expression);
-    p.register_infix(GT, (ParseInfix)&Parser.parse_infix_expression);
-    p.register_infix(L_PAREN, (ParseInfix)&Parser.parse_call_expression);
-    p.register_infix(L_BRACKET, (ParseInfix)&Parser.parse_index_expression);
-    p.register_infix(DOT, (ParseInfix)&Parser.parse_dot_expression);
+    p.register_infix(PLUS,      (ParseInfix) &Parser.parse_infix_expression);
+    p.register_infix(MINUS,     (ParseInfix) &Parser.parse_infix_expression);
+    p.register_infix(SLASH,     (ParseInfix) &Parser.parse_infix_expression);
+    p.register_infix(ASTERISK,  (ParseInfix) &Parser.parse_infix_expression);
+    p.register_infix(EQ,        (ParseInfix) &Parser.parse_infix_expression);
+    p.register_infix(NEQ,       (ParseInfix) &Parser.parse_infix_expression);
+    p.register_infix(LT,        (ParseInfix) &Parser.parse_infix_expression);
+    p.register_infix(GT,        (ParseInfix) &Parser.parse_infix_expression);
+    p.register_infix(L_PAREN,   (ParseInfix) &Parser.parse_call_expression);
+    p.register_infix(L_BRACKET, (ParseInfix) &Parser.parse_index_expression);
+    p.register_infix(DOT,       (ParseInfix) &Parser.parse_dot_expression);
 
     return p;
 }
@@ -109,29 +109,23 @@ fn Program Parser.parse_program(&self)
     stmts.init(self.allocator);
 
     while (self.cur.type != EOF) {
-        switch (self.cur.type) {
-            case I32:
-                Let* stmt = self.parse_typed_let(INTEGER);
-                if (stmt != null) stmts.push(stmt);
-            case STR:
-                Let* stmt = self.parse_typed_let(STRING);
-                if (stmt != null) stmts.push(stmt);
-            case LET: 
-                Let* stmt = self.parse_let();
-                if (stmt != null) stmts.push(stmt);
-            case STRUCT:
-                Struct* stmt = self.parse_struct_definition();
-                if (stmt != null) stmts.push(stmt);
-            case RETURN:
-                Return* stmt = self.parse_return_stmt();
-                if (stmt != null) stmts.push(stmt);
-            default:
-                ExpressionStatement* stmt = self.parse_expression_stmt();
-                if (stmt != null) stmts.push(stmt);
-        }
+        Statement stmt = self.parse_statement();
+        if (stmt != null) stmts.push(stmt);
         self.next_token();
     }
     return { stmts };
+}
+
+fn Statement Parser.parse_statement(&self)
+{
+    switch (self.cur.type) {
+        case I32:    return (Statement) self.parse_typed_let(INTEGER);
+        case STR:    return (Statement) self.parse_typed_let(STRING);
+        case LET:    return (Statement) self.parse_let();
+        case STRUCT: return (Statement) self.parse_struct_definition();
+        case RETURN: return (Statement) self.parse_return_stmt();
+        default:     return (Statement) self.parse_expression_stmt();
+    }
 }
 
 fn Let* Parser.parse_let(&self)
@@ -507,29 +501,12 @@ fn Block* Parser.parse_block_statement(&self)
     Token token = self.cur;
     List{Statement} stmts;
     stmts.init(self.allocator);
-
     self.next_token();
     while(!self.cur_token_is(R_BRACE) && !self.cur_token_is(EOF)) {
-        switch (self.cur.type) {
-            case I32: 
-                Let* stmt = self.parse_typed_let(INTEGER);
-                if (stmt != null) stmts.push(stmt);
-            case STR: 
-                Let* stmt = self.parse_typed_let(STRING);
-                if (stmt != null) stmts.push(stmt);
-            case LET: 
-                Let* stmt = self.parse_let();
-                if (stmt != null) stmts.push(stmt);
-            case RETURN:
-                Return* stmt = self.parse_return_stmt();
-                if (stmt != null) stmts.push(stmt);
-            default:
-                ExpressionStatement* stmt = self.parse_expression_stmt();
-                if (stmt != null) stmts.push(stmt);
-        }
+        Statement stmt = self.parse_statement();
+        if (stmt != null) stmts.push(stmt);
         self.next_token();
     }
-
     return allocator::new(self.allocator, Block, {
         .token = token,
         .statements = stmts,
