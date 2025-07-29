@@ -122,14 +122,15 @@ fn RuntimeValue eval(Node node, Environment* env, Allocator alloc)
         case ast::HashMap:
             return eval_hashmap((ast::HashMap*) node, env, alloc);
         case StructLiteral:
+
+            // lookup struct definition
             StructLiteral* lit = (StructLiteral*) node;
             RuntimeValue? struct_definition_name = env.get(lit.struct_name.value);
             if (catch struct_definition_name) return err("undefined struct: %s", lit.struct_name.value);
-            if (struct_definition_name.type != StructDef.typeid) {
-                return err("identifier %s is not a struct but %s", lit.struct_name.value, struct_definition_name.name());
-            }
-
+            if (struct_definition_name.type != StructDef.typeid) return err("identifier %s is not a struct but %s", lit.struct_name.value, struct_definition_name.name());
             StructDef* struct_def = (StructDef*) struct_definition_name; 
+
+            // user-provided field values
             map::HashMap{String, RuntimeValue} provided;
             provided.tinit();
             lit.field_values.@each(; Identifier field, Expression expr) {
@@ -138,9 +139,9 @@ fn RuntimeValue eval(Node node, Environment* env, Allocator alloc)
                 provided[field.value] = val;
             };
 
+            // final field map with defaults
             map::HashMap{String, RuntimeValue} fields;
             fields.tinit();
-            
             foreach (Statement stmt: struct_def.fields) {
                 Let* field = (Let*) stmt;
                 String name = field.name.value;

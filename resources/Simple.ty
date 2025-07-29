@@ -43,14 +43,23 @@ printn(reassign);
 
 struct Car
 {
-    str model: "VW";
-    i32 year;
+    str model= "VW";
+    i32 year: 2023;
 }
 Car c = Car {
     year: 2021,
 };
 printn(c);
 
-i32 name: "Robin";
-name = "Binna";
+i32 name: "Bob";
+i32 name = "Fob";
+name = "Snob";
 printn(name);
+
+if (!true) {
+    printn("ture");
+} else {
+    printn("flase");
+}
+
+
