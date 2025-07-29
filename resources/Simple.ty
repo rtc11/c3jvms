@@ -24,8 +24,8 @@ let p = Person {
     name: "Bob",
     age: 32,
 };
-
 printn(p);
+
 i32 age = p.age;
 printn(age);
 printn(p.age);
@@ -33,3 +33,24 @@ str name = p.name;
 printn(name);
 // comment
 printn(p.name); // another comment
+
+i32 reassign;
+printn(reassign);
+reassign = 13;
+printn(reassign);
+reassign = 14;
+printn(reassign);
+
+struct Car
+{
+    str model: "VW";
+    i32 year;
+}
+Car c = Car {
+    year: 2021,
+};
+printn(c);
+
+i32 name: "Robin";
+name = "Binna";
+printn(name);

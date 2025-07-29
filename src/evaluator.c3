@@ -128,13 +128,32 @@ fn RuntimeValue eval(Node node, Environment* env, Allocator alloc)
             if (struct_definition_name.type != StructDef.typeid) {
                 return err("identifier %s is not a struct but %s", lit.struct_name.value, struct_definition_name.name());
             }
-            map::HashMap{String, RuntimeValue} fields;
-            fields.tinit();
+
+            StructDef* struct_def = (StructDef*) struct_definition_name; 
+            map::HashMap{String, RuntimeValue} provided;
+            provided.tinit();
             lit.field_values.@each(; Identifier field, Expression expr) {
                 RuntimeValue val = eval(expr, env, alloc);
                 if (val.is_err()) return val;
-                fields[field.value] = val;
+                provided[field.value] = val;
             };
+
+            map::HashMap{String, RuntimeValue} fields;
+            fields.tinit();
+            
+            foreach (Statement stmt: struct_def.fields) {
+                Let* field = (Let*) stmt;
+                String name = field.name.value;
+                if (try val = provided.get(name)) {
+                    fields[name] = val;
+                } else if (field.value != null) {
+                    RuntimeValue default_val = eval(field.value, env, alloc);
+                    if (default_val.is_err()) return default_val;
+                    fields[name] = default_val;
+                } else {
+                    return err("missing value for field '%s' and no default provided", name);
+                }
+            }
             return allocator::new(alloc, StructInstance, {
                 .instance_name = lit.struct_name.value,
                 .fields = fields,

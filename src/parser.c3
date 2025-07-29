@@ -155,15 +155,12 @@ fn Let* Parser.parse_let(&self)
 fn Let* Parser.parse_typed_let(&self, TypeAnnotation type)
 {
     Token token = self.cur;
-    self.next_token(); // move to identifier
-    if (self.cur.type != IDENTIFIER) {
-        self.errors.push("expected identifier after type annotation");
-        return null;
-    }
+    if (!self.expect_peek(IDENTIFIER)) return null;
     Identifier* name = (Identifier*) self.parse_identifier();
     Expression value;
-    if (self.peek_token_is(ASSIGN)) {
-        self.next_token(); // consume =
+    // support both i32 num = 10; and str name: "foo"; 
+    if (self.peek_token_is(ASSIGN) || self.peek_token_is(COLON)) {
+        self.next_token(); // consume = or :
         self.next_token(); // move to value expression
         value = self.parse_expression(LOWEST);
     }
