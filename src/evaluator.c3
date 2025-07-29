@@ -70,12 +70,22 @@ fn RuntimeValue eval(Node node, Environment* env, Allocator alloc)
             if (right.is_err()) return right;
             return eval_expr_prefix(prefix_expr.operator, right, alloc);
         case Infix:
-            Infix* infix_expr = (Infix*) node;
-            RuntimeValue left = eval(infix_expr.left, env, alloc);
+            Infix* inf = (Infix*) node;
+
+            if (inf.operator == "=") {
+                if (inf.left.type != Identifier.typeid) return err("cannot assign to non-identifier");
+                Identifier* ident = (Identifier*) inf.left;
+                RuntimeValue val = eval(inf.right, env, alloc);
+                if (val.is_err()) return val;
+                env.set(ident.value, val);
+                return val;
+            }
+
+            RuntimeValue left = eval(inf.left, env, alloc);
             if (left.is_err()) return left;
-            RuntimeValue right = eval(infix_expr.right, env, alloc);
+            RuntimeValue right = eval(inf.right, env, alloc);
             if (right.is_err()) return right;
-            return eval_infix_expr(infix_expr.operator, left, right, alloc);
+            return eval_infix_expr(inf.operator, left, right, alloc);
         case Block: 
             return eval_stmt_block((Block*) node, env, alloc);
         case If: 

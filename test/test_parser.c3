@@ -11,7 +11,28 @@ fn void statement_let() @test
 {
     i32_eq(statement("let num = 10;"), "num", 10, "let");
     let_eq(statement("let num;"), "num", null, INTEGER); // 0 initialized, and therefore an i32
-    // i32_eq(statement("i32 num; num = 10;"), "num", 10);
+}
+
+fn void statement_reassign() @test
+{
+    Statement[] stmts = statements("i32 num; num = 10;", 2);
+    test::eq(2, stmts.len);
+    Statement first = stmts[0];
+    test::eq(first.type, Let.typeid);
+    Let* let = (Let*) first;
+    test::eq(TypeAnnotation.INTEGER, let.type);
+    test::eq(let.token_literal(), "i32");
+    test::eq(let.name.value, "num");
+    Statement second = stmts[1];
+    test::eq(second.type, ExpressionStatement.typeid); // ??
+    ExpressionStatement* expr_stmt = (ExpressionStatement*) second;
+    test::eq(expr_stmt.expression.type, Infix.typeid);
+    Infix* inf = (Infix*) expr_stmt.expression;
+    test::eq("=", inf.operator);
+    test::eq(Identifier.typeid, inf.left.type);
+    test::eq(((Identifier*) inf.left).value, "num");
+    test::eq(IntegerLiteral.typeid, inf.right.type);
+    test::eq(((IntegerLiteral*) inf.right).value, 10);
 }
 
 fn void statement_i32() @test
@@ -308,13 +329,15 @@ fn void expression_struct() @test
     };
 }
 
-fn Statement statement(String input)
+fn Statement statement(String input) => statements(input, 1)[0];
+
+fn Statement[] statements(String input, usz take)
 {
     Lexer lexer = lexer::new(input);
     Parser parser = parser::new(lexer, allocator::temp());
     Program prog = parser.parse_program();
     check_parser_errors(&parser);
-    return prog.statements[0];
+    return prog.statements.to_tarray()[..take-1];
 }
 
 macro let_eq(Statement stmt, String expect_name, expect_expr, TypeAnnotation type = LET, String token_literal = "let")

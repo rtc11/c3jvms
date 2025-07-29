@@ -45,6 +45,7 @@ fn Parser new(Lexer lexer, Allocator allocator)
     presendences[DOT]       = DOT;
     presendences[L_PAREN]   = CALL;
     presendences[L_BRACKET] = INDEX;
+    presendences[ASSIGN]    = ASSIGN;
 
     Parser p = { 
         .allocator = allocator,
@@ -83,6 +84,7 @@ fn Parser new(Lexer lexer, Allocator allocator)
     p.register_infix(L_PAREN,   (ParseInfix) &Parser.parse_call_expression);
     p.register_infix(L_BRACKET, (ParseInfix) &Parser.parse_index_expression);
     p.register_infix(DOT,       (ParseInfix) &Parser.parse_dot_expression);
+    p.register_infix(ASSIGN,    (ParseInfix) &Parser.parse_assign_expression);
 
     return p;
 }
@@ -358,6 +360,19 @@ fn Expression Parser.parse_dot_expression(&self, Expression left)
     return (Expression) dot;
 }
 
+fn Expression Parser.parse_assign_expression(&self, Expression left)
+{
+    Token token = self.cur;
+    self.next_token(); // move past =
+    Expression right = self.parse_expression(LOWEST);
+    return allocator::new(self.allocator, Infix, {
+        .token = token,
+        .operator = "=",
+        .left = left,
+        .right = right,
+    });
+}
+
 fn Expression Parser.parse_grouped_expression(&self)
 {
     self.next_token();
@@ -550,12 +565,13 @@ fn void Parser.no_parse_prefix_error(&self, TokenType type)
 
 enum Presendence {
     LOWEST,
+    ASSIGN,       // =
     EQUALS,       // ==
     LESS_GREATER, // > or <
     SUM,          // +
     PRODUCT,      // *
     PREFIX,       // -X or !X
-    DOT,
+    DOT,          // .
     CALL,         // myFunction(X)
     INDEX,        // array[index]
 }

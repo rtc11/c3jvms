@@ -116,6 +116,11 @@ fn void eval_stmt_str() @test
     // err_eq(test_eval(`str a = 5; a;`), string::tformat("cannot assign value of %s to variable of %s", ascii::colorize(GOLD, "i32"), ascii::colorize(GOLD, "str")));
 }
 
+fn void eval_stmt_reassign() @test
+{
+    i32_eq(test_eval(`i32 num; num = 10;`), 10);
+}
+
 fn void eval_struct() @test
 {
     Environment* env = environment::new(allocator::temp());
